@@ -81,6 +81,17 @@ body {
   display: none;
 }
 
+/* ── fade in once on scroll — never out, no parallax ─────── */
+
+.fadein {
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-65);
+}
+
+.fadein[data-seen="true"] {
+  opacity: 1;
+}
+
 /* ── reveal — fade in on mount, nothing else ─────────────── */
 
 .reveal {
@@ -96,7 +107,8 @@ body {
   .ta-line {
     transition: none;
   }
-  .reveal {
+  .reveal,
+  .fadein {
     opacity: 1;
     transition: none;
   }
