@@ -11,7 +11,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
 import { opaqueToken } from "@/lib/crypto/token";
 import { sendEmail } from "@/lib/providers/email";
-import { copy, fill } from "@/content/copy";
+import { approvalEmail } from "@/content/emails";
 
 const WELCOME_TOKEN_DAYS = 30;
 
@@ -134,17 +134,9 @@ export async function approveApplication(formData: FormData): Promise<void> {
 
   // 6 — the approval email, queued after commit so a failed send never rolls back her Rose
   const welcomeUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/welcome?t=${welcomeToken}`;
+  const mail = approvalEmail(memberNumber, welcomeUrl);
   await sendEmail(prisma, {
-    msg: {
-      to: email,
-      subject: fill(copy.email.approval.subject, { memberNumber }),
-      text: [
-        ...copy.email.approval.lines.map((l) => fill(l, { memberNumber })),
-        welcomeUrl,
-        "",
-        copy.email.approval.unsubscribe,
-      ].join("\n"),
-    },
+    msg: { to: email, ...mail },
     templateKey: "approval",
   }).catch(() => {});
 
