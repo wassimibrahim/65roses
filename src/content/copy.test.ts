@@ -42,6 +42,7 @@ function jsxTextNodes(source: string): string[] {
       .trim();
     if (text.length <= 2) continue;
     if (!/[a-zA-Z]/.test(text)) continue; // numbers, serials, glyphs are fine
+    if (/[;=()[\]`|&]/.test(text)) continue; // code caught between generics/arrows, not JSX text
     nodes.push(text);
   }
   return nodes;

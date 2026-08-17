@@ -37,6 +37,12 @@ export const copy = {
     },
     submit: "REQUEST ACCESS",
     underage: "NOT YET.",
+    errors: {
+      required: "WE NEED THIS.", // NEW
+      email: "NOT AN EMAIL.", // NEW
+      phone: "NOT A NUMBER.", // NEW
+      instagram: "JUST THE @.", // NEW
+    },
   },
 
   applyReceived: {

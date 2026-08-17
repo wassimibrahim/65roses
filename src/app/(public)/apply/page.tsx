@@ -1,4 +1,6 @@
-// /apply — the application: one question at a time, being considered, not signing up
+// /apply — being considered, not signing up
+import { ApplyFlow } from "./ApplyFlow";
+
 export default function ApplyPage() {
-  return null;
+  return <ApplyFlow />;
 }

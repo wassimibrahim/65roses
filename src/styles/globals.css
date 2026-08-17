@@ -81,6 +81,84 @@ body {
   display: none;
 }
 
+/* ── fields — no boxes, a chalk baseline that thickens on focus ── */
+
+.field-label {
+  display: block;
+  font-family: var(--font-chalk);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: clamp(1rem, 4vw, 1.2rem);
+  margin-bottom: 0.75rem;
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.35);
+  border-radius: 0;
+  padding: 0.4rem 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  color: var(--chalk);
+  caret-color: var(--chalk);
+  outline: none;
+  transition: border-color 400ms var(--ease-65);
+}
+
+.field-input:focus {
+  border-bottom: 2px solid var(--chalk);
+  padding-bottom: calc(0.5rem - 1px);
+}
+
+.field-error .field-input {
+  border-bottom: 2px solid var(--chalk);
+  padding-bottom: calc(0.5rem - 1px);
+}
+
+.field-error-line {
+  margin-top: 0.75rem;
+  font-family: var(--font-chalk);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1rem;
+  color: var(--chalk);
+}
+
+/* the growing hairline — the only progress indicator on /apply */
+.hairline-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(232, 226, 214, 0.45);
+  transition: width var(--dur-slow) var(--ease-65);
+}
+
+/* ── choices — small chalk squares with hand-drawn ticks ── */
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--chalk);
+  font-family: var(--font-chalk);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: clamp(1rem, 4vw, 1.2rem);
+}
+
+.choice-square {
+  flex: none;
+}
+
 /* ── fade in once on scroll — never out, no parallax ─────── */
 
 .fadein {

@@ -25,6 +25,7 @@ export const presets = {
   otpPerPhone: { name: "otp-phone", limit: 3, windowMs: 15 * MIN },
   otpPerIp: { name: "otp-ip", limit: 10, windowMs: 60 * MIN },
   applyPerIp: { name: "apply-ip", limit: 3, windowMs: 24 * 60 * MIN },
+  applyPerEmail: { name: "apply-email", limit: 3, windowMs: 24 * 60 * MIN },
   loginPerEmail: { name: "login-email", limit: 5, windowMs: 15 * MIN },
   stemLinkPerToken: { name: "stem-link", limit: 20, windowMs: 60 * MIN },
 } as const satisfies Record<string, RateLimitPreset>;
