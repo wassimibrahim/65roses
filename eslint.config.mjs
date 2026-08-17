@@ -22,6 +22,8 @@ const config = [
   },
   {
     rules: {
+      // underscore-prefixed args mark intentionally unused params (interface stubs)
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
       // Stripe may only be touched through the PaymentProvider interface.
       // The provider directory itself overrides this below.
       "no-restricted-imports": [
