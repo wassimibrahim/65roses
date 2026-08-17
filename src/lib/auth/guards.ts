@@ -38,7 +38,16 @@ export async function requireMember(): Promise<SessionUser> {
 
 export async function requireVerifiedPhone(): Promise<SessionUser> {
   const user = await requireMember();
-  if (!user.phoneVerified) throw new AuthError("FORBIDDEN");
+  if (user.role !== "MEMBER") return user; // staff carry no phone step
+  // the database, not the token, says whether her phone has answered —
+  // verification mid-session must count immediately
+  if (!user.memberId) throw new AuthError("FORBIDDEN");
+  const { prisma } = await import("@/lib/db/client");
+  const member = await prisma.memberProfile.findUnique({
+    where: { id: user.memberId },
+    select: { phoneVerified: true },
+  });
+  if (!member?.phoneVerified) throw new AuthError("FORBIDDEN");
   return user;
 }
 

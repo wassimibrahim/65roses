@@ -9,6 +9,7 @@ import { Field } from "@/components/ui/Field";
 import { TextAction } from "@/components/ui/TextAction";
 import { ChalkText } from "@/components/world/ChalkText";
 import { Serial } from "@/components/world/Serial";
+import { sendLoginCode } from "./verify/actions";
 
 export function EnterForm() {
   const router = useRouter();
@@ -22,7 +23,19 @@ export function EnterForm() {
     setSending(true);
     const res = await signIn("credentials", { redirect: false, email, password }).catch(() => null);
     if (res && !res.error) {
-      router.push("/rose");
+      // an unverified phone means the session is not fully issued yet —
+      // the OTP step stands between the password and /rose
+      const session = (await fetch("/api/auth/session")
+        .then((r) => r.json())
+        .catch(() => null)) as {
+        user?: { role?: string; phoneVerified?: boolean };
+      } | null;
+      if (session?.user?.role === "MEMBER" && !session.user.phoneVerified) {
+        await sendLoginCode();
+        router.push("/enter/verify");
+      } else {
+        router.push(session?.user?.role === "MEMBER" ? "/rose" : "/atelier");
+      }
       router.refresh();
       return;
     }

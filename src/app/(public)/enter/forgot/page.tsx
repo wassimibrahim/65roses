@@ -1,4 +1,6 @@
-// /enter/forgot — password reset: IF WE KNOW YOU, IT'S SENT. Always the same answer.
+// /enter/forgot — always the same response, whoever asks
+import { ForgotForm } from "./ForgotForm";
+
 export default function EnterForgotPage() {
-  return null;
+  return <ForgotForm />;
 }

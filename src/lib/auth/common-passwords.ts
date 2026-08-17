@@ -1,0 +1,43 @@
+// the passwords everyone tries — refused quietly, checked lowercased
+const COMMON = new Set([
+  "password",
+  "password1",
+  "password12",
+  "password123",
+  "passw0rd",
+  "p@ssword",
+  "1234567890",
+  "12345678910",
+  "0123456789",
+  "9876543210",
+  "1q2w3e4r5t",
+  "qwertyuiop",
+  "qwerty1234",
+  "asdfghjkl1",
+  "zxcvbnm123",
+  "1qaz2wsx3edc",
+  "iloveyou12",
+  "iloveyou123",
+  "welcome123",
+  "letmein123",
+  "admin12345",
+  "sunshine123",
+  "princess123",
+  "monkey12345",
+  "dragon12345",
+  "football123",
+  "baseball123",
+  "superman123",
+  "trustno1234",
+  "whatever123",
+  "beirut12345",
+  "lebanon12345",
+  "abc12345678",
+  "aaaaaaaaaa",
+  "1111111111",
+  "0000000000",
+]);
+
+export function isCommonPassword(password: string): boolean {
+  return COMMON.has(password.toLowerCase());
+}

@@ -64,6 +64,11 @@ export const copy = {
     sendCode: "SEND CODE",
     forgot: "IF WE KNOW YOU, IT'S SENT.",
     out: "OUT", // NEW
+    password: "PASSWORD", // NEW
+    passwordAgain: "AGAIN", // NEW
+    passwordShort: "LONGER.", // NEW
+    passwordCommon: "NOT THAT ONE.", // NEW
+    passwordMismatch: "NOT THE SAME.", // NEW
   },
 
   otp: {
