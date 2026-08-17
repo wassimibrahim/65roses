@@ -81,6 +81,69 @@ body {
   display: none;
 }
 
+/* ── atelier — dense, near-black, hairlines only ─────────── */
+
+.atelier-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.atelier-table th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--chalk-dim);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.08);
+}
+
+.atelier-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.08);
+  color: var(--chalk);
+}
+
+.atelier-table a {
+  color: var(--chalk);
+}
+
+.atelier-action {
+  background: none;
+  border: 1px solid rgba(232, 226, 214, 0.25);
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+
+.atelier-action:hover {
+  border-color: var(--chalk);
+}
+
+.atelier-input {
+  background: transparent;
+  border: 1px solid rgba(232, 226, 214, 0.25);
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.45rem 0.6rem;
+  outline: none;
+}
+
+.atelier-input:focus {
+  border-color: var(--chalk);
+}
+
+.atelier-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--chalk-dim);
+}
+
 /* ── fields — no boxes, a chalk baseline that thickens on focus ── */
 
 .field-label {

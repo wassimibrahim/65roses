@@ -177,6 +177,50 @@ export const copy = {
     manualEntry: "MANUAL ENTRY", // NEW
   },
 
+  // staff-facing — the atelier is plain, dense, and still speaks quietly
+  atelier: {
+    title: "ATELIER", // NEW
+    nav: {
+      applications: "APPLICATIONS", // NEW
+    },
+    applications: {
+      columns: {
+        date: "DATE", // NEW
+        name: "NAME", // NEW
+        handle: "@", // NEW
+        age: "AGE", // NEW
+        city: "CITY", // NEW
+        referral: "REFERRAL", // NEW
+        status: "STATUS", // NEW
+      },
+      filters: {
+        all: "ALL", // NEW
+        pending: "PENDING", // NEW
+        approved: "APPROVED", // NEW
+        waitlist: "WAITLIST", // NEW
+        declined: "DECLINED", // NEW
+      },
+      search: "SEARCH", // NEW
+      approve: "APPROVE", // NEW
+      waitlist: "WAITLIST", // NEW
+      decline: "DECLINE", // NEW
+      addNote: "ADD NOTE", // NEW
+      copyDm: "COPY DM", // NEW
+      copied: "ON YOUR CLIPBOARD.", // NEW
+      number: "NUMBER", // NEW
+      consent: "CONSENT", // NEW
+      notes: "NOTES", // NEW
+      trail: "TRAIL", // NEW
+      welcome: "WELCOME LINK", // NEW
+      empty: "NOTHING HERE.",
+    },
+  },
+
+  enter: {
+    email: "EMAIL", // NEW
+    password: "PASSWORD", // NEW
+  },
+
   errors: {
     wrongCode: "NOT IT. TRY AGAIN.",
     failedLogin: "NOT IT.",

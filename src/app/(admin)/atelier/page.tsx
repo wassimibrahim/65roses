@@ -1,4 +1,8 @@
-// /atelier — the admin world. Never /admin. Allowlist + role guarded, dense but plain.
-export default function AtelierPage() {
-  return null;
+// /atelier — opens on the applications queue
+import { redirect } from "next/navigation";
+import { atelierUser } from "./guard";
+
+export default async function AtelierPage() {
+  await atelierUser();
+  redirect("/atelier/applications");
 }
