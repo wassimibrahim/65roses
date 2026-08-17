@@ -161,6 +161,7 @@ export const copy = {
     active: "ACTIVE",
     quiet: "QUIET",
     paused: "PAUSED",
+    pausedContact: "WRITE TO US.", // NEW
   },
 
   door: {
