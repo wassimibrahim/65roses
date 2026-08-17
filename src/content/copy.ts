@@ -188,6 +188,43 @@ export const copy = {
     title: "ATELIER", // NEW
     nav: {
       applications: "APPLICATIONS", // NEW
+      events: "NIGHTS", // NEW — the atelier speaks the vocabulary too
+    },
+    events: {
+      create: "NEW NIGHT", // NEW
+      name: "NAME", // NEW
+      index: "INDEX", // NEW
+      city: "CITY", // NEW
+      date: "DATE", // NEW
+      venue: "VENUE", // NEW
+      address: "ADDRESS", // NEW
+      notes: "NOTES", // NEW
+      revealAt: "REVEAL AT", // NEW
+      capacity: "CAPACITY", // NEW
+      roses: "ROSES", // NEW
+      stems: "STEMS", // NEW
+      rsvpOpens: "RSVP OPENS", // NEW
+      rsvpDeadline: "RSVP DEADLINE", // NEW
+      stemsAllowed: "STEMS ALLOWED", // NEW
+      stemPrice: "STEM PRICE", // NEW
+      editionMark: "EDITION MARK", // NEW
+      tables: "TABLES", // NEW
+      tablesOutAt: "TABLES OUT AT", // NEW
+      stats: {
+        invited: "INVITED", // NEW
+        confirmed: "CONFIRMED", // NEW
+        declined: "DECLINED", // NEW
+        noResponse: "NO RESPONSE", // NEW
+        stemsRegistered: "STEMS REGISTERED", // NEW
+        stemsPaid: "STEMS PAID", // NEW
+      },
+      invite: {
+        title: "INVITATIONS", // NEW
+        preview: "PREVIEW", // NEW
+        send: "SEND", // NEW
+        founding: "FOUNDING", // NEW
+        invited: "INVITED", // NEW
+      },
     },
     applications: {
       columns: {
