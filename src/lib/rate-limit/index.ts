@@ -28,6 +28,7 @@ export const presets = {
   applyPerEmail: { name: "apply-email", limit: 3, windowMs: 24 * 60 * MIN },
   loginPerEmail: { name: "login-email", limit: 5, windowMs: 15 * MIN },
   stemLinkPerToken: { name: "stem-link", limit: 20, windowMs: 60 * MIN },
+  stemLinkPerIp: { name: "stem-link-ip", limit: 30, windowMs: 60 * MIN },
 } as const satisfies Record<string, RateLimitPreset>;
 
 export async function consume(

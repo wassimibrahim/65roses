@@ -90,6 +90,50 @@ export async function createEvent(formData: FormData): Promise<void> {
   revalidatePath("/atelier/events");
 }
 
+export async function refundStem(formData: FormData): Promise<void> {
+  const { admin, ip, userAgent } = await actionContext();
+  const stemGuestId = z.string().min(1).parse(formData.get("stemGuestId"));
+
+  const payment = await prisma.payment.findFirst({
+    where: { stemGuestId, status: "PAID" },
+    select: { id: true, providerRef: true, eventId: true },
+  });
+  if (!payment?.providerRef) return;
+
+  const { getPaymentProvider } = await import("@/lib/providers/payment");
+  const result = await getPaymentProvider().refund(payment.providerRef);
+  if (!result.ok) return;
+
+  // refund + revoked credential + freed seat, one transaction
+  await prisma.$transaction(async (tx) => {
+    await tx.payment.update({
+      where: { id: payment.id },
+      data: { status: "REFUNDED", refundedAt: new Date() },
+    });
+    await tx.stemCredential.updateMany({
+      where: { stemGuestId },
+      data: { status: "REVOKED" },
+    });
+    await tx.stemGuest.update({
+      where: { id: stemGuestId },
+      data: { paymentStatus: "REFUNDED", deletedAt: new Date(), tokenExpiresAt: new Date() },
+    });
+    await tx.auditLog.create({
+      data: {
+        actorId: admin.id,
+        action: "payment.refund",
+        entityType: "StemGuest",
+        entityId: stemGuestId,
+        after: { paymentId: payment.id },
+        ip,
+        userAgent,
+      },
+    });
+  });
+
+  if (payment.eventId) revalidatePath(`/atelier/events/${payment.eventId}`);
+}
+
 export async function sendInvitations(formData: FormData): Promise<void> {
   const { admin, ip, userAgent } = await actionContext();
   const input = z

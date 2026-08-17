@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { copy } from "@/content/copy";
 import { invitationMessages } from "@/content/messages";
 import { atelierUser } from "../../guard";
-import { sendInvitations } from "../actions";
+import { refundStem, sendInvitations } from "../actions";
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
@@ -58,6 +58,19 @@ export default async function EventDetailPage({
     select: { id: true, memberNumber: true, firstName: true, status: true, city: true },
   });
 
+  const stems = await prisma.stemGuest.findMany({
+    where: { eventId: id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      firstName: true,
+      paymentStatus: true,
+      deletedAt: true,
+      hostMember: { select: { memberNumber: true } },
+      credential: { select: { status: true } },
+    },
+  });
+
   const preview = invitationMessages(event, process.env.NEXT_PUBLIC_APP_URL ?? "");
   const t = copy.atelier.events;
 
@@ -101,6 +114,34 @@ export default async function EventDetailPage({
           {"\n"}
           {preview.email.text}
         </pre>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <span className="atelier-label">{t.stemsTable.title}</span>
+        <table className="atelier-table" style={{ maxWidth: "42rem" }}>
+          <tbody>
+            {stems.map((s) => (
+              <tr key={s.id}>
+                <td>{s.firstName}</td>
+                <td className="atelier-label">
+                  {t.stemsTable.host} {s.hostMember.memberNumber}
+                </td>
+                <td>{s.paymentStatus}</td>
+                <td>{s.credential?.status ?? "—"}</td>
+                <td>
+                  {s.paymentStatus === "PAID" ? (
+                    <form action={refundStem}>
+                      <input type="hidden" name="stemGuestId" value={s.id} />
+                      <button type="submit" className="atelier-action">
+                        {t.stemsTable.refund}
+                      </button>
+                    </form>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </section>
 
       <section className="flex flex-col gap-4">

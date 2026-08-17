@@ -115,6 +115,8 @@ export const copy = {
     whoAreYouBringing: "WHO ARE YOU BRINGING?",
     howDoYouKnowHim: "HOW DO YOU KNOW HIM?",
     sendHimHisLink: "SEND HIM HIS LINK",
+    chooseAgain: "CHOOSE AGAIN", // NEW — replace him until the deadline
+    sms: "SMS", // NEW — the quiet secondary send
     heCantAskUs: "HE CAN'T ASK US.",
     askHer: "ASK HER.",
   },
@@ -218,6 +220,11 @@ export const copy = {
         stemsRegistered: "STEMS REGISTERED", // NEW
         stemsPaid: "STEMS PAID", // NEW
       },
+      stemsTable: {
+        title: "STEMS", // NEW
+        host: "WITH", // NEW
+        refund: "REFUND", // NEW
+      },
       invite: {
         title: "INVITATIONS", // NEW
         preview: "PREVIEW", // NEW
@@ -296,6 +303,7 @@ export const copy = {
     doorCode: "{name}.\nYOUR CODE: {code}\nbring your phone.",
     venue: "{name}. {venue}", // NEW — the only message that ever carries the address
     stemLink: "{name}. 00—05.\n{link}",
+    stemPaid: "{name}.", // NEW — her quiet notification: his first name, nothing else
     delivered: "SHE FOUND YOU.",
     missedYou: "WE MISSED YOU.",
     stillWithUs: "ARE YOU STILL WITH US?",
