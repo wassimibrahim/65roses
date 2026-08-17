@@ -12,7 +12,13 @@ const config = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   prettier,
   {
-    ignores: ["node_modules/**", ".next/**", "coverage/**", "playwright-report/**"],
+    ignores: [
+      "node_modules/**",
+      ".next/**",
+      "coverage/**",
+      "playwright-report/**",
+      "next-env.d.ts",
+    ],
   },
   {
     rules: {
