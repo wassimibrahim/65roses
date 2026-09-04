@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { AuthError, requireDoor } from "@/lib/auth/guards";
 import { doorState } from "@/lib/door/roster";
 import { tonight } from "@/lib/door/tonight";
+import { doorCity } from "@/lib/door/session";
 import { copy } from "@/content/copy";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +21,7 @@ export async function GET() {
     throw err;
   }
 
-  const event = await tonight(prisma);
+  const event = await tonight(prisma, new Date(), await doorCity());
   if (!event) return nothing();
 
   return NextResponse.json(await doorState(prisma, event.id));

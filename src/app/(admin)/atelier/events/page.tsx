@@ -1,15 +1,22 @@
-// /atelier/events — the nights, and the form that creates one
+// /atelier/events — the nights, and the form that creates one.
+//
+// The list and the form both follow the city the atelier is in, so capacities
+// and currency arrive already right rather than being typed from memory.
 import Link from "next/link";
 import { prisma } from "@/lib/db/client";
 import { copy } from "@/content/copy";
+import { atelierCity } from "@/lib/atelier/city";
+import { CITY_DEFAULTS } from "@/lib/cities";
 import { atelierUser } from "../guard";
 import { createEvent } from "./actions";
 
 export default async function EventsPage() {
   await atelierUser();
+  const city = await atelierCity();
+  const defaults = CITY_DEFAULTS[city];
 
   const events = await prisma.event.findMany({
-    where: { deletedAt: null },
+    where: { deletedAt: null, city },
     orderBy: { startsAt: "desc" },
     select: {
       id: true,
@@ -74,7 +81,11 @@ export default async function EventsPage() {
         style={{ borderLeft: "1px solid rgba(232, 226, 214, 0.08)" }}
       >
         <div className="mb-4 atelier-label">{t.create}</div>
+        {/* every default in this form comes from the city, so the form's
+            identity does too — otherwise switching city leaves the old
+            uncontrolled values sitting in the DOM */}
         <form
+          key={city}
           action={createEvent}
           className="grid grid-cols-2 gap-3"
           style={{ fontSize: "0.75rem" }}
@@ -100,7 +111,7 @@ export default async function EventsPage() {
           </label>
           <label className="flex flex-col gap-1">
             <span className="atelier-label">{t.city}</span>
-            <select className="atelier-input" name="city" defaultValue="BEIRUT">
+            <select className="atelier-input" name="city" defaultValue={city}>
               {["BEIRUT", "MADRID"].map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -134,7 +145,7 @@ export default async function EventsPage() {
               className="atelier-input"
               name="capacityTotal"
               type="number"
-              defaultValue={120}
+              defaultValue={defaults.capacityTotal}
               required
             />
           </label>
@@ -144,7 +155,7 @@ export default async function EventsPage() {
               className="atelier-input"
               name="capacityRoses"
               type="number"
-              defaultValue={80}
+              defaultValue={defaults.capacityRoses}
               required
             />
           </label>
@@ -154,13 +165,18 @@ export default async function EventsPage() {
               className="atelier-input"
               name="capacityStems"
               type="number"
-              defaultValue={40}
+              defaultValue={defaults.capacityStems}
               required
             />
           </label>
           <label className="flex flex-col gap-1">
             <span className="atelier-label">{t.stemPrice}</span>
-            <input className="atelier-input" name="stemPriceCents" type="number" defaultValue={0} />
+            <input
+              className="atelier-input"
+              name="stemPriceCents"
+              type="number"
+              defaultValue={defaults.stemPriceCents}
+            />
           </label>
           <label className="flex flex-col gap-1">
             <span className="atelier-label">{t.rsvpOpens}</span>

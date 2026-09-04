@@ -11,6 +11,7 @@ import { requireAdmin } from "@/lib/auth/guards";
 import { audit } from "@/lib/audit";
 import { eventSchema, slugify } from "@/lib/validation/event";
 import { timezoneForCity, utcFromZoned } from "@/lib/time";
+import { CITY_DEFAULTS } from "@/lib/cities";
 import { invitationMessages } from "@/content/messages";
 import { sendSMS } from "@/lib/providers/sms";
 import { sendEmail } from "@/lib/providers/email";
@@ -70,7 +71,8 @@ export async function createEvent(formData: FormData): Promise<void> {
         : null,
       stemsAllowed: input.stemsAllowed,
       stemPriceCents: input.stemPriceCents,
-      stemCurrency: input.stemCurrency,
+      // a night is priced in its own city's money unless someone says otherwise
+      stemCurrency: input.stemCurrency ?? CITY_DEFAULTS[input.city].currency,
       editionMark: input.editionMark,
       tablesEnabled: input.tablesEnabled,
       tablesRemovedAtLocal: input.tablesRemovedAtLocal,

@@ -25,7 +25,8 @@ export const eventSchema = z.object({
   rsvpDeadline: z.string().optional().default(""),
   stemsAllowed: z.coerce.boolean().default(true),
   stemPriceCents: z.coerce.number().int().min(0).default(0),
-  stemCurrency: z.string().trim().toUpperCase().length(3).default("USD"),
+  // left optional so the city decides it — Beirut prices in USD, Madrid in EUR
+  stemCurrency: z.string().trim().toUpperCase().length(3).optional(),
   editionMark: z.string().trim().min(1).max(60),
   tablesEnabled: z.coerce.boolean().default(true),
   tablesRemovedAtLocal: z

@@ -1,4 +1,10 @@
 // the landing — one column of oxblood. Five breaths, two doors in, nothing explained.
+//
+// The home line is BEIRUT. A second city appears here only once it has a night,
+// and it appears as another line, never as a selector: she is not asked to
+// choose a city, she is told where the world is.
+import { prisma } from "@/lib/db/client";
+import { announcedCities, CITY_LINE } from "@/lib/cities";
 import { copy } from "@/content/copy";
 import { ChalkText } from "@/components/world/ChalkText";
 import { MonoText } from "@/components/world/MonoText";
@@ -7,7 +13,9 @@ import { Serial } from "@/components/world/Serial";
 import { TextAction } from "@/components/ui/TextAction";
 import { FadeIn } from "@/components/ui/FadeIn";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const cities = await announcedCities(prisma);
+
   return (
     <main className="mx-auto max-w-xl">
       {/* hero */}
@@ -18,8 +26,12 @@ export default function LandingPage() {
               {copy.landing.mark}
             </ChalkText>
             <RoseMark />
-            <div className="mt-24">
-              <ChalkText size="line">{copy.landing.home}</ChalkText>
+            <div className="mt-24 flex flex-col items-center gap-3">
+              {cities.map((city) => (
+                <ChalkText key={city} size="line">
+                  {CITY_LINE[city]}
+                </ChalkText>
+              ))}
             </div>
           </div>
           <div className="flex flex-col items-center gap-3 pb-4">

@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { AuthError, requireDoor } from "@/lib/auth/guards";
 import { admit, doorEntrySchema } from "@/lib/door/entry";
 import { tonight } from "@/lib/door/tonight";
+import { doorCity } from "@/lib/door/session";
 import { copy } from "@/content/copy";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  const event = await tonight(prisma);
+  const event = await tonight(prisma, new Date(), await doorCity());
   if (!event) return NextResponse.json({ error: copy.errors.notFound }, { status: 404 });
 
   const parsed = doorEntrySchema.safeParse(await req.json().catch(() => null));

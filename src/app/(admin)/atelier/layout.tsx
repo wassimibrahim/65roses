@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { copy } from "@/content/copy";
 import { MonoText } from "@/components/world/MonoText";
+import { CitySwitch } from "./CitySwitch";
 
 export default function AtelierLayout({ children }: { children: ReactNode }) {
   return (
@@ -47,10 +48,17 @@ export default function AtelierLayout({ children }: { children: ReactNode }) {
           <Link href="/atelier/audit">
             <MonoText>{copy.atelier.nav.audit}</MonoText>
           </Link>
+          <Link href="/atelier/subscriptions">
+            <MonoText>{copy.atelier.nav.subscriptions}</MonoText>
+          </Link>
+          <Link href="/atelier/nfc">
+            <MonoText>{copy.atelier.nav.nfc}</MonoText>
+          </Link>
           <Link href="/atelier/settings">
             <MonoText>{copy.atelier.nav.settings}</MonoText>
           </Link>
         </nav>
+        <CitySwitch />
       </header>
       {children}
     </div>

@@ -7,6 +7,7 @@ export const copy = {
   landing: {
     mark: "65",
     home: "BEIRUT.",
+    madrid: "MADRID.", // NEW — shown only once Madrid has a night
     enter: "ENTER",
     forRoses: "FOR ROSES.",
     everyRose: "EVERY ROSE GETS A ROSE.",
@@ -85,6 +86,7 @@ export const copy = {
     roseIsQuiet: "YOUR ROSE IS QUIET.",
     wakeMyRose: "WAKE MY ROSE",
     awakeAgain: "YOUR ROSE IS AWAKE AGAIN.",
+    lapsed: "WRITE TO US.", // NEW — the one line a lapsed payment ever gets
     nav: {
       nights: "NIGHTS", // NEW
       rose: "ROSE", // NEW
@@ -218,6 +220,19 @@ export const copy = {
       messages: "MESSAGES", // NEW
       audit: "TRAIL", // NEW
       settings: "SETTINGS", // NEW
+      nfc: "TAGS", // NEW
+      city: "CITY", // NEW — the atelier works one city at a time
+      subscriptions: "MEMBERSHIP", // NEW
+    },
+    nfc: {
+      rose: "ROSES", // NEW
+      stem: "STEMS", // NEW
+      uid: "TAG", // NEW
+      bind: "BIND", // NEW
+      unbind: "CLEAR", // NEW
+      bound: "BOUND", // NEW
+      hint: "TAP OR TYPE.", // NEW
+      empty: "NOTHING HERE.",
     },
     circle: {
       announcements: "ANNOUNCEMENTS", // NEW — we speak, she reads

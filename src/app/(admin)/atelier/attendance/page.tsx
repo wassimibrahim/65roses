@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db/client";
 import { copy } from "@/content/copy";
+import { atelierCity } from "@/lib/atelier/city";
 import { atelierUser } from "../guard";
 import { markNoShows, undoNoShow } from "./actions";
 
@@ -14,11 +15,12 @@ export default async function AttendancePage({
   searchParams: Promise<{ event?: string }>;
 }) {
   await atelierUser();
+  const city = await atelierCity();
   const params = await searchParams;
   const t = copy.atelier.attendance;
 
   const events = await prisma.event.findMany({
-    where: { deletedAt: null, status: { notIn: ["DRAFT", "CANCELLED"] } },
+    where: { deletedAt: null, city, status: { notIn: ["DRAFT", "CANCELLED"] } },
     orderBy: { startsAt: "desc" },
     take: 40,
     select: { id: true, index: true, name: true, endsAt: true },

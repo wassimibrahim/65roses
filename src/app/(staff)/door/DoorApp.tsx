@@ -36,6 +36,12 @@ type View =
 
 const t = copy.door;
 
+// Web NFC, which TypeScript's DOM lib does not know about yet
+interface NdefReader {
+  scan(options?: { signal?: AbortSignal }): Promise<void>;
+  onreading: ((event: { serialNumber: string }) => void) | null;
+}
+
 // a host reads three lines at a glance, never a sentence
 const VERDICT_LINE: Record<Verdict, string> = {
   IN: t.youreIn,
@@ -143,6 +149,58 @@ export function DoorApp({ initial }: { initial: DoorState }) {
     if (view.at !== "entry") setCode("");
     if (view.at !== "entry") setSent(false);
   }, [view]);
+
+  // ── a tag resolves a person; her four digits still let her in ──
+  const onTag = useCallback(async (uid: string) => {
+    const result = await fetch("/api/door/nfc", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ uid }),
+    })
+      .then((r) => (r.ok ? (r.json() as Promise<{ entry: DoorEntry | null }>) : null))
+      .catch(() => null);
+    if (result?.entry) setView({ at: "entry", entry: result.entry });
+  }, []);
+
+  useEffect(() => {
+    // Web NFC, where the phone has it and the page is allowed to use it
+    const nfc = (window as unknown as { NDEFReader?: new () => NdefReader }).NDEFReader;
+    if (!nfc) return;
+    const reader = new nfc();
+    const controller = new AbortController();
+    reader
+      .scan({ signal: controller.signal })
+      .then(() => {
+        reader.onreading = (event) => onTag(event.serialNumber);
+      })
+      .catch(() => {
+        // permission refused, or the phone has no NFC — the reader below still works
+      });
+    return () => controller.abort();
+  }, [onTag]);
+
+  useEffect(() => {
+    // A USB tag reader is a keyboard: it types the uid and presses Enter. It
+    // fires faster than a person can, which is how we tell them apart.
+    let buffer = "";
+    let last = 0;
+    function onKey(event: KeyboardEvent) {
+      const now = Date.now();
+      if (now - last > 80) buffer = "";
+      last = now;
+      if (event.key === "Enter") {
+        if (buffer.length >= 8) {
+          event.preventDefault();
+          onTag(buffer);
+        }
+        buffer = "";
+        return;
+      }
+      if (event.key.length === 1) buffer += event.key;
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onTag]);
 
   const results = useMemo(
     () => (q.trim() ? state.roster.filter((e) => matches(e, q)).slice(0, 12) : []),

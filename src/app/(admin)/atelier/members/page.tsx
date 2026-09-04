@@ -13,6 +13,7 @@ import {
   memberWhere,
   type MemberFilters,
 } from "@/lib/atelier/member-filters";
+import { atelierCity } from "@/lib/atelier/city";
 import { atelierUser } from "../guard";
 import { approveWake, dismissWake, inviteMembers, setMemberStatus } from "./actions";
 
@@ -28,6 +29,11 @@ export default async function MembersPage({
 }) {
   const admin = await atelierUser();
   const filters = await searchParams;
+  // her home city, defaulted from the atelier's mode. She belongs to one city
+  // and can still be invited in another, so this is a default and not a fence:
+  // choosing ANY in the filter shows every Rose.
+  const city = await atelierCity();
+  const scoped = { ...filters, city: filters.city ?? city };
   const t = copy.atelier.members;
 
   const waking = await prisma.memberProfile.findMany({
@@ -45,7 +51,7 @@ export default async function MembersPage({
   });
 
   const members = await prisma.memberProfile.findMany({
-    where: memberWhere(filters),
+    where: memberWhere(scoped),
     orderBy: { memberNumber: "asc" },
     take: 500,
     select: {
@@ -69,6 +75,7 @@ export default async function MembersPage({
   const upcoming = await prisma.event.findMany({
     where: {
       deletedAt: null,
+      city,
       status: { in: ["ANNOUNCED", "INVITING", "LOCKED"] },
       startsAt: { gt: new Date() },
     },
@@ -137,8 +144,8 @@ export default async function MembersPage({
             </option>
           ))}
         </select>
-        <select className="atelier-input" name="city" defaultValue={filters.city ?? ""}>
-          <option value="">{t.city}</option>
+        <select className="atelier-input" name="city" defaultValue={scoped.city}>
+          <option value="">{t.any}</option>
           {["BEIRUT", "MADRID"].map((c) => (
             <option key={c} value={c}>
               {c}

@@ -25,7 +25,7 @@ export default async function RoseHomePage() {
   const data = await getRoseHomeData(prisma, memberId);
   if (!data) redirect("/enter");
 
-  const { member, night, needsAddress } = data;
+  const { member, night, needsAddress, subscription } = data;
   const statusWord =
     member.status === "ACTIVE"
       ? copy.status.active
@@ -70,6 +70,13 @@ export default async function RoseHomePage() {
           {member.status === "PAUSED" ? (
             <div className="mt-6">
               <MonoText>{copy.status.pausedContact}</MonoText>
+            </div>
+          ) : null}
+          {/* a lapsed payment is a conversation, not a punishment: one line,
+              and nothing about it touches her status or her Rose */}
+          {subscription === "LAPSED" ? (
+            <div className="mt-6">
+              <MonoText>{copy.roseHome.lapsed}</MonoText>
             </div>
           ) : null}
           {/* her Rose is made and has nowhere to go — one quiet line, once */}

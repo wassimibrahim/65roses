@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { AuthError, requireDoor } from "@/lib/auth/guards";
 import { generateDoorCode, hashDoorCode, roseCodeContext, stemCodeContext } from "@/lib/door/code";
 import { tonight } from "@/lib/door/tonight";
+import { doorCity } from "@/lib/door/session";
 import { sendSMS } from "@/lib/providers/sms";
 import { audit } from "@/lib/audit";
 import { copy, fill } from "@/content/copy";
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     throw err;
   }
 
-  const event = await tonight(prisma);
+  const event = await tonight(prisma, new Date(), await doorCity());
   if (!event) return NextResponse.json({ error: copy.errors.notFound }, { status: 404 });
 
   const parsed = schema.safeParse(await req.json().catch(() => null));
