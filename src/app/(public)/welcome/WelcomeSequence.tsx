@@ -1,5 +1,9 @@
 // SHE'S YOURS — a timed reveal out of black. One tap skips to the end.
-// Reduced motion shows the final state immediately. Gold lives here and almost nowhere else.
+// Reduced motion shows the final state immediately.
+//
+// This is the approval screen, where gold is permitted — as hairline dividers
+// and on her number, and as nothing else. Not as a glow, not as a wash: gold
+// is the object, and the object is the pendant.
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -10,7 +14,7 @@ import { TextAction } from "@/components/ui/TextAction";
 
 const STAGES = [600, 1200, 2400, 3200, 4000, 5000, 6000] as const;
 // stage index:   0     1     2     3     4     5     6
-// 0 gold light · 1 SHE'S YOURS. · 2 the Rose · 3 her number · 4 YOU'RE A ROSE.
+// 0 the first hairline · 1 SHE'S YOURS. · 2 the Rose · 3 her number · 4 YOU'RE A ROSE.
 // 5 the two dimmed lines · 6 ENTER 65
 
 export function WelcomeSequence({ memberNumber, token }: { memberNumber: string; token: string }) {
@@ -44,13 +48,16 @@ export function WelcomeSequence({ memberNumber, token }: { memberNumber: string;
       style={{ background: "var(--black)", cursor: done ? "auto" : "pointer" }}
       onClick={() => setStage(STAGES.length - 1)}
     >
-      {/* the warm gold light blooming from centre */}
+      {/* a gold hairline, drawn once above her — the permitted gold on this
+          screen, and the only gold besides the pendant and her number */}
       <div
-        className="pointer-events-none fixed inset-0"
+        className="pointer-events-none"
         style={{
           ...at(0),
-          opacity: stage >= 0 ? 0.12 : 0,
-          background: "radial-gradient(circle at 50% 46%, var(--gold) 0%, transparent 62%)",
+          width: "clamp(6rem, 34vw, 11rem)",
+          height: "1px",
+          background: "var(--gold)",
+          opacity: stage >= 0 ? 0.5 : 0,
         }}
       />
 
@@ -79,6 +86,17 @@ export function WelcomeSequence({ memberNumber, token }: { memberNumber: string;
       <div style={at(4)}>
         <ChalkText size="line">{copy.welcome.youreARose}</ChalkText>
       </div>
+
+      <div
+        className="pointer-events-none"
+        style={{
+          ...at(4),
+          width: "clamp(6rem, 34vw, 11rem)",
+          height: "1px",
+          background: "var(--gold)",
+          opacity: stage >= 4 ? 0.5 : 0,
+        }}
+      />
 
       <div className="flex flex-col items-center gap-2" style={at(5)}>
         <span

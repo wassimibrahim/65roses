@@ -80,6 +80,12 @@ export default async function StemPublicPage({ params }: { params: Promise<{ tok
         <StemConfirm token={token} phoneVerified={stem.phoneVerified} paid={paid} />
       </div>
 
+      {/* he will want to know where, and who else, and whether he can bring
+          someone. This page is the whole answer: she is. */}
+      <div className="pb-24 text-center">
+        <ChalkText size="small">{copy.stem.askHer}</ChalkText>
+      </div>
+
       <Serial />
     </main>
   );

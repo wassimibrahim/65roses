@@ -63,6 +63,11 @@ export function StemFlow({
             {copy.stem.sms}
           </a>
           <MonoText>{link.replace(/^https?:\/\//, "")}</MonoText>
+          {/* the rule she needs, where she needs it: he now holds a link and
+              will have questions, and they are hers to answer */}
+          <div className="mt-6">
+            <ChalkText size="small">{copy.stem.heCantAskUs}</ChalkText>
+          </div>
           {canReplace ? (
             <TextAction
               variant="quiet"

@@ -75,7 +75,6 @@ export default async function AuditPage({
         <Link href="/atelier/audit" className="atelier-action">
           {copy.atelier.members.clear}
         </Link>
-        <span className="atelier-label">{t.readOnly}</span>
       </form>
 
       <table className="atelier-table">

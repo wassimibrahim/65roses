@@ -239,12 +239,9 @@ export const copy = {
       roses: "ROSES", // NEW — Roses speak to each other
       link: "LINK", // NEW
       rotate: "ROTATE", // NEW — the old one dies
-      rotated: "ROTATED.", // NEW
       status: "STATUS", // NEW
       invited: "INVITED", // NEW
-      joined: "JOINED", // NEW
       left: "LEFT", // NEW
-      removed: "REMOVED", // NEW
       never: "NOT SET.", // NEW
       empty: "NOTHING HERE.",
     },
@@ -259,7 +256,6 @@ export const copy = {
       nights: "NIGHTS", // NEW
       lastSeen: "LAST SEEN", // NEW
       pause: "PAUSE", // NEW
-      unpause: "UNPAUSE", // NEW
       handle: "@", // NEW
       city: "CITY", // NEW
       founding: "FOUNDING", // NEW
@@ -318,7 +314,6 @@ export const copy = {
       actor: "WHO", // NEW
       entity: "WHAT", // NEW
       when: "WHEN", // NEW
-      readOnly: "READ ONLY.", // NEW
       empty: "NOTHING HERE.",
     },
     settings: {
@@ -328,8 +323,6 @@ export const copy = {
       terms: "TERMS", // NEW
       flags: "CITIES", // NEW
       save: "SAVE", // NEW
-      saved: "SAVED.", // NEW
-      ownerOnly: "NOTHING HERE.", // NEW
     },
     referrals: {
       invite: "INVITE", // NEW
@@ -347,7 +340,6 @@ export const copy = {
       venue: "VENUE", // NEW
       address: "ADDRESS", // NEW
       notes: "NOTES", // NEW
-      revealAt: "REVEAL AT", // NEW
       capacity: "CAPACITY", // NEW
       roses: "ROSES", // NEW
       stems: "STEMS", // NEW
@@ -421,7 +413,6 @@ export const copy = {
       },
       reveal: "REVEAL", // NEW — one click, one audit row
       manifest: "MANIFEST", // NEW
-      print: "PRINT", // NEW
       advance: "ADVANCE", // NEW
       fail: "FAILED", // NEW
       reason: "REASON", // NEW
@@ -429,7 +420,6 @@ export const copy = {
       save: "SAVE", // NEW
       selected: "SELECTED", // NEW
       replace: "REPLACE", // NEW
-      replaceReason: "THEFT · DAMAGE · SAFETY", // NEW
       approve: "APPROVE", // NEW
       empty: "NOTHING HERE.",
     },

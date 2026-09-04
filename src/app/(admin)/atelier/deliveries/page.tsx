@@ -196,9 +196,7 @@ export default async function DeliveriesPage({
           Her number does not change; the old object is not asked for. */}
       {admin.role === "OWNER" ? (
         <section className="mt-10 flex flex-col gap-3">
-          <span className="atelier-label">
-            {t.replace} · {t.replaceReason}
-          </span>
+          <span className="atelier-label">{t.replace}</span>
           <form action={replaceRose} className="flex flex-wrap items-end gap-2">
             <input
               className="atelier-input w-28"
