@@ -124,6 +124,10 @@ body {
 }
 
 .atelier-input {
+  /* native controls — date pickers, selects — otherwise render in the
+     browser's own blue. The atelier is chalk on black, including these. */
+  color-scheme: dark;
+  accent-color: var(--chalk-dim);
   background: transparent;
   border: 1px solid rgba(232, 226, 214, 0.25);
   color: var(--chalk);

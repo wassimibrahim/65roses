@@ -12,11 +12,14 @@ export const SETTING_KEYS = {
   circleRoses: "circle.link.roses",
 } as const;
 
-export type SettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
+// The table is a general key/value store; SETTING_KEYS names the ones this
+// module cares about, and the atelier owns a few more (house rules, privacy).
+export type SettingKey = string;
+export type CircleSettingKey = (typeof SETTING_KEYS)[keyof typeof SETTING_KEYS];
 
 export type CircleGroup = "ANNOUNCEMENTS" | "ROSES";
 
-export const GROUP_KEY: Record<CircleGroup, SettingKey> = {
+export const GROUP_KEY: Record<CircleGroup, CircleSettingKey> = {
   ANNOUNCEMENTS: SETTING_KEYS.circleAnnouncements,
   ROSES: SETTING_KEYS.circleRoses,
 };

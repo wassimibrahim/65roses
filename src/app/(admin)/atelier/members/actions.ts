@@ -97,29 +97,121 @@ export async function dismissWake(formData: FormData): Promise<void> {
   revalidatePath("/atelier/members");
 }
 
-export async function pauseMember(formData: FormData): Promise<void> {
+/**
+ * Bulk status change from the list. PAUSED and the rest are exactly the
+ * statuses a computation may never set, which is why a person sets them here.
+ */
+export async function setMemberStatus(formData: FormData): Promise<void> {
   const { admin, ip, userAgent } = await actionContext();
-  const id = z.string().min(1).parse(formData.get("id"));
+  const input = z
+    .object({
+      ids: z.array(z.string().min(1)).min(1),
+      status: z.enum(["ACTIVE", "QUIET", "AT_RISK", "PAUSED", "SUSPENDED", "INACTIVE"]),
+    })
+    .parse({ ids: formData.getAll("ids"), status: formData.get("status") });
+
+  const before = await prisma.memberProfile.findMany({
+    where: { id: { in: input.ids } },
+    select: { id: true, status: true },
+  });
+
+  await prisma.memberProfile.updateMany({
+    where: { id: { in: input.ids } },
+    data: { status: input.status, statusChangedAt: new Date() },
+  });
+
+  for (const row of before) {
+    await audit(prisma, {
+      action: "member.status.change",
+      entityType: "MemberProfile",
+      entityId: row.id,
+      actorId: admin.id,
+      before: { status: row.status },
+      after: { status: input.status },
+      ip,
+      userAgent,
+    });
+  }
+
+  revalidatePath("/atelier/members");
+}
+
+/**
+ * A manual adjustment to her standing. It needs a reason, and the reason is
+ * kept — a number moved by a person without one is indistinguishable from a bug.
+ */
+export async function adjustRoseHealth(formData: FormData): Promise<void> {
+  const { admin, ip, userAgent } = await actionContext();
+  const input = z
+    .object({
+      id: z.string().min(1),
+      delta: z.coerce.number().int().min(-100).max(100),
+      reason: z.string().trim().min(3).max(300),
+    })
+    .parse({
+      id: formData.get("id"),
+      delta: formData.get("delta"),
+      reason: formData.get("reason"),
+    });
+
   const member = await prisma.memberProfile.findUnique({
-    where: { id },
-    select: { status: true },
+    where: { id: input.id },
+    select: { roseHealth: true, status: true },
   });
   if (!member) return;
 
-  const next = member.status === "PAUSED" ? "ACTIVE" : "PAUSED";
+  const next = Math.max(0, Math.min(100, member.roseHealth + input.delta));
   await prisma.memberProfile.update({
-    where: { id },
-    data: { status: next, statusChangedAt: new Date() },
+    where: { id: input.id },
+    data: { roseHealth: next, roseHealthAt: new Date() },
   });
   await audit(prisma, {
-    action: "member.status.change",
+    action: "member.health.adjust",
     entityType: "MemberProfile",
-    entityId: id,
+    entityId: input.id,
     actorId: admin.id,
-    before: { status: member.status },
-    after: { status: next },
+    before: { roseHealth: member.roseHealth },
+    after: { roseHealth: next, delta: input.delta, reason: input.reason },
     ip,
     userAgent,
   });
+
+  revalidatePath(`/atelier/members/${input.id}`);
+}
+
+export async function addMemberNote(formData: FormData): Promise<void> {
+  const { admin } = await actionContext();
+  const input = z
+    .object({ id: z.string().min(1), body: z.string().trim().min(1).max(2000) })
+    .parse({ id: formData.get("id"), body: formData.get("body") });
+
+  await prisma.adminNote.create({
+    data: { memberId: input.id, body: input.body, authorId: admin.id },
+  });
+  await audit(prisma, {
+    action: "member.note.add",
+    entityType: "MemberProfile",
+    entityId: input.id,
+    actorId: admin.id,
+  });
+  revalidatePath(`/atelier/members/${input.id}`);
+}
+
+/**
+ * Bulk invite from the list. It delegates to the event's own send so the
+ * invitable-status guard and the one-invitation-per-Rose constraint are the
+ * same ones the events page uses — there is no second path into an invitation.
+ */
+export async function inviteMembers(formData: FormData): Promise<void> {
+  const ids = formData.getAll("ids");
+  const eventId = formData.get("inviteEventId");
+  if (!eventId || ids.length === 0) return;
+
+  const forward = new FormData();
+  forward.set("eventId", eventId);
+  for (const id of ids) forward.append("memberIds", id);
+
+  const { sendInvitations } = await import("../events/actions");
+  await sendInvitations(forward);
   revalidatePath("/atelier/members");
 }

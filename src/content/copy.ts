@@ -214,6 +214,10 @@ export const copy = {
       members: "ROSES", // NEW
       deliveries: "DELIVERIES", // NEW
       circle: "CIRCLE", // NEW
+      attendance: "ATTENDANCE", // NEW
+      messages: "MESSAGES", // NEW
+      audit: "TRAIL", // NEW
+      settings: "SETTINGS", // NEW
     },
     circle: {
       announcements: "ANNOUNCEMENTS", // NEW — we speak, she reads
@@ -241,7 +245,76 @@ export const copy = {
       lastSeen: "LAST SEEN", // NEW
       pause: "PAUSE", // NEW
       unpause: "UNPAUSE", // NEW
+      handle: "@", // NEW
+      city: "CITY", // NEW
+      founding: "FOUNDING", // NEW
+      delivered: "DELIVERED", // NEW
+      community: "CIRCLE", // NEW
+      noShows: "NO-SHOWS", // NEW
+      flags: "FLAGS", // NEW
+      any: "ANY", // NEW
+      apply: "APPLY", // NEW
+      clear: "CLEAR", // NEW
+      inviteTo: "INVITE TO", // NEW
+      exportCsv: "EXPORT", // NEW
+      withAddresses: "WITH ADDRESSES", // NEW — owner only
+      detail: "OPEN", // NEW
+      identity: "IDENTITY", // NEW
+      credential: "THE ROSE", // NEW
+      serial: "SERIAL", // NEW
+      qr: "QR", // NEW
+      nfc: "NFC", // NEW
+      replacement: "REPLACED", // NEW
+      deliveries: "DELIVERIES", // NEW
+      invitations: "NIGHTS", // NEW
+      stems: "STEMS", // NEW
+      checkIns: "ARRIVALS", // NEW
+      trail: "TRAIL", // NEW
+      breakdown: "BREAKDOWN", // NEW
+      adjust: "ADJUST", // NEW
+      adjustReason: "REASON", // NEW
+      back: "BACK", // NEW
       empty: "NOTHING HERE.",
+    },
+    attendance: {
+      confirmed: "CONFIRMED", // NEW
+      arrived: "ARRIVED", // NEW
+      missing: "MISSING", // NEW
+      markNoShows: "MARK NO-SHOWS", // NEW
+      undo: "UNDO", // NEW
+      reason: "REASON", // NEW
+      at: "AT", // NEW
+      method: "HOW", // NEW
+      empty: "NOTHING HERE.",
+    },
+    messages: {
+      template: "TEMPLATE", // NEW
+      channel: "CHANNEL", // NEW
+      status: "STATUS", // NEW
+      to: "TO", // NEW
+      when: "WHEN", // NEW
+      resend: "RESEND", // NEW
+      testSend: "TEST SEND", // NEW
+      preview: "PREVIEW", // NEW
+      empty: "NOTHING HERE.",
+    },
+    audit: {
+      action: "ACTION", // NEW
+      actor: "WHO", // NEW
+      entity: "WHAT", // NEW
+      when: "WHEN", // NEW
+      readOnly: "READ ONLY.", // NEW
+      empty: "NOTHING HERE.",
+    },
+    settings: {
+      sequence: "NEXT NUMBER", // NEW
+      houseRules: "HOUSE RULES", // NEW
+      privacy: "PRIVACY", // NEW
+      terms: "TERMS", // NEW
+      flags: "CITIES", // NEW
+      save: "SAVE", // NEW
+      saved: "SAVED.", // NEW
+      ownerOnly: "NOTHING HERE.", // NEW
     },
     referrals: {
       invite: "INVITE", // NEW
