@@ -28,6 +28,9 @@ export default function AtelierLayout({ children }: { children: ReactNode }) {
           <Link href="/atelier/referrals">
             <MonoText>{copy.atelier.nav.referrals}</MonoText>
           </Link>
+          <Link href="/atelier/deliveries">
+            <MonoText>{copy.atelier.nav.deliveries}</MonoText>
+          </Link>
         </nav>
       </header>
       {children}

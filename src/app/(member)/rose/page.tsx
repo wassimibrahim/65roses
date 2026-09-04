@@ -25,7 +25,7 @@ export default async function RoseHomePage() {
   const data = await getRoseHomeData(prisma, memberId);
   if (!data) redirect("/enter");
 
-  const { member, night } = data;
+  const { member, night, needsAddress } = data;
   const statusWord =
     member.status === "ACTIVE"
       ? copy.status.active
@@ -70,6 +70,14 @@ export default async function RoseHomePage() {
           {member.status === "PAUSED" ? (
             <div className="mt-6">
               <MonoText>{copy.status.pausedContact}</MonoText>
+            </div>
+          ) : null}
+          {/* her Rose is made and has nowhere to go — one quiet line, once */}
+          {needsAddress && member.status !== "PAUSED" ? (
+            <div className="mt-8">
+              <TextAction href="/rose/delivery" variant="quiet" size="small">
+                {copy.delivery.whereShouldSheFindYou}
+              </TextAction>
             </div>
           ) : null}
         </header>

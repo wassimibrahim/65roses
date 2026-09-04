@@ -57,3 +57,53 @@ describe("code hashing", () => {
     expect(await verifyPassword(hash, "wrong")).toBe(false);
   });
 });
+
+describe("the extension's argument rules", () => {
+  it("encrypts values written to and searched by an encrypted field", async () => {
+    const { encryptArgs, encryptField } = await import("./encrypt");
+    const args = encryptArgs({
+      where: { phone: "+9613123456" },
+      data: { addressLine: "Rue Gouraud 12", notes: "blue door, ring twice" },
+    });
+    expect(args.where.phone).toBe(encryptField("+9613123456"));
+    expect(args.data.addressLine).toBe(encryptField("Rue Gouraud 12"));
+    expect(args.data.notes).toBe(encryptField("blue door, ring twice"));
+  });
+
+  it("leaves a sort direction alone — 'asc' is a keyword, not a value", async () => {
+    const { encryptArgs } = await import("./encrypt");
+    const args = encryptArgs({
+      orderBy: [{ phone: "asc" }, { notes: { sort: "desc", nulls: "last" } }],
+      distinct: ["phone"],
+    });
+    expect(args.orderBy[0]!.phone).toBe("asc");
+    expect(args.orderBy[1]!.notes).toEqual({ sort: "desc", nulls: "last" });
+    expect(args.distinct).toEqual(["phone"]);
+  });
+
+  it("still encrypts a where nested inside an include", async () => {
+    const { encryptArgs, encryptField } = await import("./encrypt");
+    const args = encryptArgs({
+      include: { member: { where: { phone: "+9613123456" }, select: { phone: true } } },
+    });
+    expect(args.include.member.where.phone).toBe(encryptField("+9613123456"));
+    expect(args.include.member.select.phone).toBe(true);
+  });
+
+  it("walks a relation named notes without mangling it", async () => {
+    const { encryptArgs } = await import("./encrypt");
+    const args = encryptArgs({ data: { notes: { create: { body: "she is a friend" } } } });
+    expect(args.data.notes.create.body).toBe("she is a friend");
+  });
+
+  it("decrypts an encrypted field however deeply a result nests it", async () => {
+    const { decryptRow, encryptField } = await import("./encrypt");
+    const row = decryptRow({
+      id: "1",
+      member: { phone: encryptField("+9613123456") },
+      deliveries: [{ address: { addressLine: encryptField("Rue Gouraud 12") } }],
+    });
+    expect(row.member.phone).toBe("+9613123456");
+    expect(row.deliveries[0]!.address.addressLine).toBe("Rue Gouraud 12");
+  });
+});

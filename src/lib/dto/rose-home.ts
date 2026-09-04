@@ -17,6 +17,8 @@ export interface RoseHomeNight {
 export interface RoseHomeDto {
   member: MemberDto;
   night: RoseHomeNight | null;
+  // she has not told us where the Rose should find her yet
+  needsAddress: boolean;
 }
 
 // the slice of prisma this needs — tests pass a fake
@@ -50,6 +52,11 @@ export async function getRoseHomeData(
         where: { deletedAt: null, event: { endsAt: { gt: now } } },
         select: { firstName: true, eventId: true },
       },
+      roseDeliveries: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { status: true },
+      },
     },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   })) as any;
@@ -77,5 +84,9 @@ export async function getRoseHomeData(
     };
   }
 
-  return { member: toMemberDto(member), night };
+  return {
+    member: toMemberDto(member),
+    night,
+    needsAddress: member.roseDeliveries?.[0]?.status === "PENDING_ADDRESS",
+  };
 }

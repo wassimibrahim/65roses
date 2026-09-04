@@ -45,15 +45,39 @@ export function decryptField(stored: string): string {
 }
 
 // fields marked "encrypted at rest" in schema.prisma — these key names are
-// unique to PII-bearing models, so they are matched by name wherever they appear
-const ENCRYPTED_KEYS = new Set(["phone", "addressLine"]);
+// unique to PII-bearing models, so they are matched by name wherever they appear.
+//
+// notes is here because "the blue door behind the pharmacy, ring twice" is her
+// address written another way, and it deserves the same protection as the line
+// above it. It is a string only on DeliveryAddress; everywhere else in the
+// schema a key called notes is a relation, and relations are walked, not encrypted.
+const ENCRYPTED_KEYS = new Set(["phone", "addressLine", "notes"]);
+
+// Prisma arguments whose leaves are directives rather than values: "asc",
+// "desc", "last", a field name. Encrypting one of those sends ciphertext where
+// Prisma expects a keyword. select and include are deliberately NOT here —
+// their subtrees can hold a nested where that does need encrypting, and their
+// own leaves are booleans, which nothing here touches.
+const DIRECTIVE_KEYS = new Set([
+  "orderBy",
+  "distinct",
+  "by",
+  "_count",
+  "_sum",
+  "_avg",
+  "_min",
+  "_max",
+]);
 
 function transform(value: unknown, fn: (s: string) => string, insideEncryptedKey = false): unknown {
   if (typeof value === "string") return insideEncryptedKey ? fn(value) : value;
   if (Array.isArray(value)) return value.map((v) => transform(v, fn, insideEncryptedKey));
   if (value && typeof value === "object" && value.constructor === Object) {
     return Object.fromEntries(
-      Object.entries(value).map(([k, v]) => [k, transform(v, fn, ENCRYPTED_KEYS.has(k))]),
+      Object.entries(value).map(([k, v]) => [
+        k,
+        DIRECTIVE_KEYS.has(k) ? v : transform(v, fn, ENCRYPTED_KEYS.has(k)),
+      ]),
     );
   }
   return value;
@@ -76,13 +100,18 @@ function decryptResult(value: unknown): unknown {
 // Prisma extension: encrypts phone/addressLine in every write and in where
 // clauses (deterministic encryption makes equality still match), decrypts them
 // in every result, however deeply nested via include/select.
+// exported so the rules above can be asserted directly — the extension is the
+// only place PII protection is applied, so it is the last place to guess
+export const encryptArgs = <T>(args: T): T => transform(args, encryptField) as T;
+export const decryptRow = <T>(row: T): T => decryptResult(row) as T;
+
 export const fieldEncryptionExtension = Prisma.defineExtension({
   name: "field-encryption",
   query: {
     $allModels: {
       async $allOperations({ args, query }) {
-        const result = await query(transform(args, encryptField) as typeof args);
-        return decryptResult(result);
+        const result = await query(encryptArgs(args));
+        return decryptRow(result);
       },
     },
   },

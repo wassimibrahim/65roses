@@ -146,6 +146,11 @@ export const copy = {
     forYou: "FOR YOU.",
     yours: "YOURS.",
     edit: "EDIT", // NEW
+    recipient: "WHO SIGNS FOR HER", // NEW
+    city: "CITY", // NEW
+    area: "AREA", // NEW
+    address: "ADDRESS", // NEW
+    notes: "anything we should know?", // NEW — lowercase, a whisper
   },
 
   circle: {
@@ -207,6 +212,7 @@ export const copy = {
       events: "NIGHTS", // NEW — the atelier speaks the vocabulary too
       referrals: "REFERRALS", // NEW
       members: "ROSES", // NEW
+      deliveries: "DELIVERIES", // NEW
     },
     members: {
       wakeQueue: "WAKE QUEUE", // NEW — she asked; someone answers
@@ -299,6 +305,29 @@ export const copy = {
       notes: "NOTES", // NEW
       trail: "TRAIL", // NEW
       welcome: "WELCOME LINK", // NEW
+      empty: "NOTHING HERE.",
+    },
+    deliveries: {
+      columns: {
+        number: "NUMBER", // NEW
+        member: "ROSE", // NEW
+        area: "AREA", // NEW
+        status: "STATUS", // NEW
+        updated: "UPDATED", // NEW
+        courier: "COURIER", // NEW
+      },
+      reveal: "REVEAL", // NEW — one click, one audit row
+      manifest: "MANIFEST", // NEW
+      print: "PRINT", // NEW
+      advance: "ADVANCE", // NEW
+      fail: "FAILED", // NEW
+      reason: "REASON", // NEW
+      courierRef: "TRACKING", // NEW
+      save: "SAVE", // NEW
+      selected: "SELECTED", // NEW
+      replace: "REPLACE", // NEW
+      replaceReason: "THEFT · DAMAGE · SAFETY", // NEW
+      approve: "APPROVE", // NEW
       empty: "NOTHING HERE.",
     },
   },
