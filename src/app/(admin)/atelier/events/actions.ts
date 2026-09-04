@@ -14,6 +14,7 @@ import { timezoneForCity, utcFromZoned } from "@/lib/time";
 import { invitationMessages } from "@/content/messages";
 import { sendSMS } from "@/lib/providers/sms";
 import { sendEmail } from "@/lib/providers/email";
+import { INVITABLE_STATUSES } from "@/lib/rose-health/weights";
 
 async function actionContext() {
   const admin = await requireAdmin();
@@ -149,7 +150,13 @@ export async function sendInvitations(formData: FormData): Promise<void> {
   });
 
   const members = await prisma.memberProfile.findMany({
-    where: { id: { in: input.memberIds }, deletedAt: null },
+    where: {
+      id: { in: input.memberIds },
+      deletedAt: null,
+      // a paused Rose cannot be invited by picking her name — the guard is here,
+      // in the send, not in whoever ticked the boxes
+      status: { in: [...INVITABLE_STATUSES] },
+    },
     select: {
       id: true,
       phone: true,

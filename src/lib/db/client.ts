@@ -7,7 +7,9 @@ function build() {
   return new PrismaClient().$extends(fieldEncryptionExtension);
 }
 
-type Db = ReturnType<typeof build>;
+// the extended client — every server module that takes the db types against this,
+// never against a bare PrismaClient, or the encryption extension falls off
+export type Db = ReturnType<typeof build>;
 
 const globalForPrisma = globalThis as unknown as { prisma?: Db };
 

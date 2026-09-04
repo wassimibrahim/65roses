@@ -192,6 +192,21 @@ export const copy = {
       applications: "APPLICATIONS", // NEW
       events: "NIGHTS", // NEW — the atelier speaks the vocabulary too
       referrals: "REFERRALS", // NEW
+      members: "ROSES", // NEW
+    },
+    members: {
+      wakeQueue: "WAKE QUEUE", // NEW — she asked; someone answers
+      wake: "WAKE", // NEW
+      asked: "ASKED", // NEW
+      number: "NUMBER", // NEW
+      name: "NAME", // NEW
+      status: "STATUS", // NEW
+      health: "HEALTH", // NEW — staff only, never rendered to a Rose
+      nights: "NIGHTS", // NEW
+      lastSeen: "LAST SEEN", // NEW
+      pause: "PAUSE", // NEW
+      unpause: "UNPAUSE", // NEW
+      empty: "NOTHING HERE.",
     },
     referrals: {
       invite: "INVITE", // NEW
