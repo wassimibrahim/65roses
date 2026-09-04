@@ -30,11 +30,13 @@ export function EnterForm() {
         .catch(() => null)) as {
         user?: { role?: string; phoneVerified?: boolean };
       } | null;
-      if (session?.user?.role === "MEMBER" && !session.user.phoneVerified) {
+      const role = session?.user?.role;
+      if (role === "MEMBER" && !session?.user?.phoneVerified) {
         await sendLoginCode();
         router.push("/enter/verify");
       } else {
-        router.push(session?.user?.role === "MEMBER" ? "/rose" : "/atelier");
+        // each role lands where it works: her page, the door, the atelier
+        router.push(role === "MEMBER" ? "/rose" : role === "DOOR" ? "/door" : "/atelier");
       }
       router.refresh();
       return;

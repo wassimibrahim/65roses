@@ -183,6 +183,20 @@ export const copy = {
     askAHost: "ASK A HOST.",
     override: "OVERRIDE", // NEW
     manualEntry: "MANUAL ENTRY", // NEW
+    search: "SEARCH", // NEW — phone, name, number
+    back: "BACK", // NEW
+    confirmed: "CONFIRMED", // NEW
+    notConfirmed: "NO RSVP", // NEW
+    paid: "PAID", // NEW
+    bracelet: "BRACELET", // NEW
+    reason: "REASON", // NEW
+    name: "NAME", // NEW
+    phone: "PHONE", // NEW
+    add: "ADD", // NEW
+    sent: "SENT.", // NEW
+    offline: "NO SIGNAL", // NEW — a state, not an apology
+    queued: "HELD", // NEW — check-ins waiting to reach us
+    nothing: "NOTHING HERE.", // NEW
   },
 
   // staff-facing — the atelier is plain, dense, and still speaks quietly

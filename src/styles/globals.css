@@ -254,3 +254,52 @@ body {
     transition: none;
   }
 }
+
+/* ── the door ─────────────────────────────────────────────────────────
+   Read at arm's length, in the dark, by someone holding a clipboard and a
+   drink. Targets are large; nothing here is subtle. */
+
+.door-search {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.35);
+  border-radius: 0;
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 12vw, 3rem);
+  letter-spacing: 0.12em;
+  text-align: center;
+  padding: 0.6rem 0;
+  outline: none;
+}
+
+.door-search:focus {
+  border-bottom-color: var(--chalk);
+}
+
+.door-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 4.5rem;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.08);
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.door-row-meta {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--chalk-dim);
+}
