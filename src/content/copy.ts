@@ -213,6 +213,21 @@ export const copy = {
       referrals: "REFERRALS", // NEW
       members: "ROSES", // NEW
       deliveries: "DELIVERIES", // NEW
+      circle: "CIRCLE", // NEW
+    },
+    circle: {
+      announcements: "ANNOUNCEMENTS", // NEW — we speak, she reads
+      roses: "ROSES", // NEW — Roses speak to each other
+      link: "LINK", // NEW
+      rotate: "ROTATE", // NEW — the old one dies
+      rotated: "ROTATED.", // NEW
+      status: "STATUS", // NEW
+      invited: "INVITED", // NEW
+      joined: "JOINED", // NEW
+      left: "LEFT", // NEW
+      removed: "REMOVED", // NEW
+      never: "NOT SET.", // NEW
+      empty: "NOTHING HERE.",
     },
     members: {
       wakeQueue: "WAKE QUEUE", // NEW — she asked; someone answers

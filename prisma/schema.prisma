@@ -828,3 +828,18 @@ model AuditLog {
   @@index([actorId, createdAt])
   @@index([action, createdAt])
 }
+
+// ─────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────
+
+// Values an owner changes at runtime and a deploy must not own — today the two
+// community invite links, which have to be rotatable the moment one leaks.
+// Additive: nothing else in this schema changes shape because of it.
+model Setting {
+  key   String @id
+  value String
+
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
