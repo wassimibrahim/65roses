@@ -15,7 +15,8 @@
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "rehearsal": "tsx tests/rehearsal/night.mts"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
