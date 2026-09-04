@@ -60,17 +60,30 @@ export async function POST(req: NextRequest) {
     return ok();
   }
 
-  // a typed member number or @handle in KNOW A ROSE? links the referrer if it matches
-  const referral = input.knowARose.trim().replace(/^@+/, "");
-  const referrer = referral
-    ? await prisma.memberProfile.findFirst({
+  // a fast-track invite token binds the referrer directly; otherwise a typed
+  // member number or @handle in KNOW A ROSE? links one if it matches
+  const invited = input.r
+    ? await prisma.referral.findFirst({
         where: {
-          OR: [{ memberNumber: referral }, { instagramHandle: referral.toLowerCase() }],
-          deletedAt: null,
+          inviteToken: input.r,
+          status: "INVITED",
+          inviteExpiresAt: { gt: new Date() },
         },
-        select: { id: true },
+        select: { id: true, authorMemberId: true, instagramHandle: true },
       })
     : null;
+  const referral = input.knowARose.trim().replace(/^@+/, "");
+  const referrer = invited
+    ? { id: invited.authorMemberId }
+    : referral
+      ? await prisma.memberProfile.findFirst({
+          where: {
+            OR: [{ memberNumber: referral }, { instagramHandle: referral.toLowerCase() }],
+            deletedAt: null,
+          },
+          select: { id: true },
+        })
+      : null;
 
   await prisma.application.create({
     data: {
@@ -82,7 +95,7 @@ export async function POST(req: NextRequest) {
       dateOfBirth: input.dateOfBirth,
       area: input.area || null,
       howFound: input.howFound || null,
-      referralCode: input.knowARose || null,
+      referralCode: invited ? `@${invited.instagramHandle}` : input.knowARose || null,
       referredById: referrer?.id ?? null,
       confirmedAdult: true,
       agreedHouseRules: true,
@@ -93,6 +106,13 @@ export async function POST(req: NextRequest) {
     },
     select: { id: true },
   });
+
+  if (invited) {
+    await prisma.referral.update({
+      where: { id: invited.id },
+      data: { status: "APPLIED" },
+    });
+  }
 
   await sendEmail(prisma, {
     msg: {

@@ -59,7 +59,7 @@ export default async function ApplicationsPage({
           }
         : {}),
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ referredById: { sort: "desc", nulls: "last" } }, { createdAt: "desc" }],
     take: 200,
     select: {
       id: true,

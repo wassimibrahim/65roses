@@ -1,5 +1,6 @@
 // the atelier — near-black, chalk, hairlines. Dense is allowed; loud is not.
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { copy } from "@/content/copy";
 import { MonoText } from "@/components/world/MonoText";
 
@@ -15,12 +16,15 @@ export default function AtelierLayout({ children }: { children: ReactNode }) {
       >
         <MonoText dim={false}>{copy.atelier.title}</MonoText>
         <nav className="flex gap-6">
-          <a href="/atelier/applications">
+          <Link href="/atelier/applications">
             <MonoText>{copy.atelier.nav.applications}</MonoText>
-          </a>
-          <a href="/atelier/events">
+          </Link>
+          <Link href="/atelier/events">
             <MonoText>{copy.atelier.nav.events}</MonoText>
-          </a>
+          </Link>
+          <Link href="/atelier/referrals">
+            <MonoText>{copy.atelier.nav.referrals}</MonoText>
+          </Link>
         </nav>
       </header>
       {children}

@@ -3,7 +3,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { copy } from "@/content/copy";
 import { BEIRUT_AREAS } from "@/content/areas";
 import { normalizeInstagram, normalizePhone, isAdult } from "@/lib/validation/apply";
@@ -83,6 +83,7 @@ const CONSENTS = [
 
 export function ApplyFlow() {
   const router = useRouter();
+  const fastTrack = useSearchParams().get("r") ?? "";
   const startedAt = useMemo(() => Date.now(), []);
   const [values, setValues] = useState<Record<StepKey, string>>({
     firstName: "",
@@ -170,6 +171,7 @@ export function ApplyFlow() {
         howFound: values.howFound,
         knowARose: values.knowARose,
         consents,
+        r: fastTrack,
         website: honeypot.current,
         startedAt,
       }),

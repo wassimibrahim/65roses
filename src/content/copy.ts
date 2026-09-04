@@ -191,6 +191,14 @@ export const copy = {
     nav: {
       applications: "APPLICATIONS", // NEW
       events: "NIGHTS", // NEW — the atelier speaks the vocabulary too
+      referrals: "REFERRALS", // NEW
+    },
+    referrals: {
+      invite: "INVITE", // NEW
+      decline: "DECLINE", // NEW
+      reviewing: "REVIEWING", // NEW
+      link: "LINK", // NEW
+      nights: "NIGHTS", // NEW — her attendance, inline
     },
     events: {
       create: "NEW NIGHT", // NEW

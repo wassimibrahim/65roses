@@ -43,6 +43,8 @@ export const applySchema = z.object({
     messaging: z.literal(true),
     privacy: z.literal(true),
   }),
+  // fast-track referral invite token, if she arrived through one
+  r: z.string().max(64).optional().default(""),
   // bot checks — never mentioned in the UI
   website: z.string().max(0).optional().default(""), // honeypot: any content is a bot
   startedAt: z.number().int().positive(),
