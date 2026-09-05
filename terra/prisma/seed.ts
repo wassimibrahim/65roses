@@ -350,7 +350,10 @@ async function main() {
       if (ebitda - marketRent > 0 && propertyValue > 5_000_000) tags.push("SALE_LEASEBACK_CANDIDATE");
       if (propertyValue > 12_000_000) tags.push("INSTITUTIONAL_RE_BUYER_CANDIDATE");
       if (inst.students / inst.capacity < 0.75) tags.push("UNDERUTILISED_PROPERTY");
-      if ((inst.plotSqm ?? 0) > (inst.builtAreaSqm ?? 0) * 2.2) tags.push("DEVELOPMENT_OPPORTUNITY");
+      // One threshold decides both the tag and the prose, so the property
+      // panel cannot contradict itself.
+      const hasSiteHeadroom = (inst.plotSqm ?? 0) > (inst.builtAreaSqm ?? 0) * 2;
+      if (hasSiteHeadroom || inst.adjacentLand) tags.push("DEVELOPMENT_OPPORTUNITY");
       if (inst.students / inst.capacity > 0.9) tags.push("EXPANSION_CAPEX_REQUIRED");
 
       await prisma.property.create({
@@ -372,11 +375,15 @@ async function main() {
           annualRent: inst.tenure === "MIXED" ? rentFor(inst, revenue) : 0,
           rentToRevenue: Math.round((marketRent / revenue) * 10000) / 10000,
           rentToEbitda: ebitda > 0 ? Math.round((marketRent / ebitda) * 10000) / 10000 : null,
-          expansionPotential:
-            (inst.plotSqm ?? 0) > (inst.builtAreaSqm ?? 0) * 2
+          expansionPotential: [
+            hasSiteHeadroom
               ? "Material undeveloped land within the site boundary."
               : "Limited headroom within the existing footprint.",
-          adjacentLand: (inst.plotSqm ?? 0) > (inst.builtAreaSqm ?? 0) * 2.2,
+            inst.adjacentLand ? "Ownership also controls land beyond the boundary." : null,
+          ]
+            .filter(Boolean)
+            .join(" "),
+          adjacentLand: inst.adjacentLand ?? false,
           condition: jitter(slug) > 0.7 ? "Requires investment" : "Good",
           maintenanceCapex: Math.round(revenue * 0.02),
           zoningNotes: "Educational use. Terra estimate — not verified against the municipal plan.",

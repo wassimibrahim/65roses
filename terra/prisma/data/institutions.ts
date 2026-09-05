@@ -43,6 +43,8 @@ export interface InstitutionSeed {
   /** Site area, used for the property layer where the campus is owned. */
   builtAreaSqm?: number;
   plotSqm?: number;
+  /** Land outside the campus boundary that ownership controls. A fact, not a ratio. */
+  adjacentLand?: boolean;
   summary: string;
   /** Marks the demo's hero asset — the one the narrated walkthrough uses. */
   hero?: boolean;
@@ -248,6 +250,7 @@ export const INSTITUTIONS: InstitutionSeed[] = [
     reputation: 73,
     builtAreaSqm: 8600,
     plotSqm: 22000,
+    adjacentLand: true,
     summary:
       "Costa del Sol bilingual school benefiting from sustained international in-migration. Adjacent land is held by the same family.",
   },
@@ -1008,6 +1011,7 @@ export const INSTITUTIONS: InstitutionSeed[] = [
     reputation: 68,
     builtAreaSqm: 7200,
     plotSqm: 26000,
+    adjacentLand: true,
     summary:
       "International school north of Barcelona with substantial undeveloped land within the site boundary.",
   },
