@@ -146,3 +146,51 @@ describe("match engine", () => {
     expect(ranked[0]!.mandateId).toBe("mandate-1");
   });
 });
+
+describe("property mandates", () => {
+  const propcoMandate: MandateProfile = {
+    ...operatorMandate,
+    id: "mandate-propco",
+    organisationName: "Iberian Social Infrastructure",
+    organisationType: "REAL_ESTATE_INVESTOR",
+    control: "CONTROL",
+    propertyPreference: "REQUIRES_OWNED",
+    requiresOwnedProperty: true,
+    leaseAcceptable: false,
+    // The band is stated in property value, which is how a landlord thinks.
+    minEv: 8_000_000,
+    maxEv: 30_000_000,
+    minEbitda: 3_000_000,
+    maxEbitda: 12_000_000,
+    minStudents: 600,
+    maxStudents: 2500,
+  };
+
+  it("sizes a property mandate on the property value, not the enterprise value", () => {
+    // EV of €37m is outside the €8–30m band; the €21m freehold is inside it.
+    const result = matchScore(madridK12, propcoMandate);
+    const size = result.dimensions.find((d) => d.key === "size")!;
+    expect(size.raw).toBe(100);
+    expect(result.reasons.join(" ")).toContain("Property value sits inside the mandate band");
+  });
+
+  it("does not test a property mandate against the EBITDA band", () => {
+    const result = matchScore({ ...madridK12, ebitda: 250_000 }, propcoMandate);
+    expect(result.issues.join(" ")).not.toContain("EBITDA");
+  });
+
+  it("still tests an operating buyer against enterprise value and EBITDA", () => {
+    const result = matchScore(madridK12, operatorMandate);
+    expect(result.reasons.join(" ")).toContain("Enterprise value sits inside the mandate band");
+  });
+
+  it("penalises a property mandate where there is no freehold to buy", () => {
+    const result = matchScore(
+      { ...madridK12, tenure: "LEASED", propertyValue: null },
+      propcoMandate,
+    );
+    expect(result.disqualified).toBe(true);
+    const size = result.dimensions.find((d) => d.key === "size")!;
+    expect(size.raw).toBe(0);
+  });
+});

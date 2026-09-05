@@ -104,10 +104,26 @@ function dim(
   return { key, label, weight: 0, raw: bounded(raw), weighted: 0, drivers, detractors };
 }
 
+/**
+ * A property mandate is buying the campus, not the school. It is priced on
+ * rent and yield, so its size test runs against the property value and the
+ * EBITDA band does not apply at all.
+ */
+export function isPropertyMandate(mandate: MandateProfile): boolean {
+  return (
+    mandate.requiresOwnedProperty ||
+    mandate.propertyPreference === "REQUIRES_OWNED" ||
+    ["REAL_ESTATE_INVESTOR", "REIT", "INFRASTRUCTURE_FUND", "PENSION_FUND"].includes(
+      mandate.organisationType,
+    )
+  );
+}
+
 export function matchScore(asset: AssetProfile, mandate: MandateProfile): MatchResult {
   const reasons: string[] = [];
   const issues: string[] = [];
   let disqualified = false;
+  const propertyMandate = isPropertyMandate(mandate);
 
   // ── Geography ──────────────────────────────────────────────────────────────
   const geoDrivers: string[] = [];
@@ -135,19 +151,25 @@ export function matchScore(asset: AssetProfile, mandate: MandateProfile): MatchR
   const sizeDrivers: string[] = [];
   const sizeDetractors: string[] = [];
   const parts: number[] = [];
-  if (asset.enterpriseValue != null && (mandate.minEv != null || mandate.maxEv != null)) {
-    const s = fitWithin(asset.enterpriseValue, mandate.minEv, mandate.maxEv);
+  // What the buyer is actually acquiring decides which number is tested.
+  const sizeBasis = propertyMandate ? asset.propertyValue : asset.enterpriseValue;
+  if (sizeBasis != null && (mandate.minEv != null || mandate.maxEv != null)) {
+    const s = fitWithin(sizeBasis, mandate.minEv, mandate.maxEv);
     parts.push(s);
-    if (s >= 95) sizeDrivers.push("Enterprise value sits inside the mandate band");
-    else if (s < 45) sizeDetractors.push("Enterprise value outside the mandate band");
+    const label = propertyMandate ? "Property value" : "Enterprise value";
+    if (s >= 95) sizeDrivers.push(`${label} sits inside the mandate band`);
+    else if (s < 45) sizeDetractors.push(`${label} outside the mandate band`);
+  } else if (propertyMandate && asset.propertyValue == null && (mandate.minEv != null || mandate.maxEv != null)) {
+    parts.push(0);
+    sizeDetractors.push("No freehold to value against the mandate band");
   }
-  if (asset.ebitda != null && (mandate.minEbitda != null || mandate.maxEbitda != null)) {
+  if (!propertyMandate && asset.ebitda != null && (mandate.minEbitda != null || mandate.maxEbitda != null)) {
     const s = fitWithin(asset.ebitda, mandate.minEbitda, mandate.maxEbitda);
     parts.push(s);
     if (s >= 95) sizeDrivers.push("EBITDA inside the mandate band");
     else if (s < 45) sizeDetractors.push("EBITDA outside the mandate band");
   }
-  if (asset.students != null && (mandate.minStudents != null || mandate.maxStudents != null)) {
+  if (!propertyMandate && asset.students != null && (mandate.minStudents != null || mandate.maxStudents != null)) {
     const s = fitWithin(asset.students, mandate.minStudents, mandate.maxStudents);
     parts.push(s);
     if (s >= 95) sizeDrivers.push(`${asset.students} students matches target scale`);
