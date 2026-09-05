@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+/* ───────────────────────────────────────────────────────────────────────────
+   TERRA OS — design tokens
+   Warm ivory ground, charcoal type, stone structure. Forest green is reserved
+   for high-conviction positives, burgundy for material risk, gold for
+   proprietary Terra marks. No fintech blue anywhere.
+   ─────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  --color-ivory: #fbfaf7;
+  --color-paper: #f4f2ed;
+  --color-parchment: #ece8e0;
+  --color-linen: #e2ddd3;
+
+  --color-ink: #16181a;
+  --color-charcoal: #2b2f33;
+  --color-graphite: #4a5054;
+  --color-stone: #767c80;
+  --color-stone-light: #9aa0a3;
+  --color-rule: #d9d4ca;
+  --color-rule-soft: #e6e2d9;
+
+  --color-forest: #1f4d3a;
+  --color-forest-soft: #e4ece7;
+  --color-burgundy: #6d2434;
+  --color-burgundy-soft: #f2e6e8;
+  --color-gold: #a4884f;
+  --color-gold-soft: #f0e9db;
+  --color-amber: #8a6a2f;
+
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif:
+    var(--font-serif-display), "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-mono:
+    var(--font-mono-num), "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-rule-soft);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-ivory);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    font-feature-settings: "cv05" 1, "ss01" 1;
+  }
+
+  ::selection {
+    background: var(--color-parchment);
+    color: var(--color-ink);
+  }
+
+  /* Numerals are tabular everywhere. Financial software must align. */
+  .tnum,
+  table td,
+  table th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 400;
+    letter-spacing: -0.011em;
+  }
+
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-linen);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-rule);
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-graphite);
+    outline-offset: 1px;
+  }
+}
+
+@layer components {
+  /* The editorial voice: serif, tight, quiet. */
+  .display {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.018em;
+  }
+
+  /* Section eyebrow used above every panel. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+
+  .num {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .hairline {
+    border-top: 1px solid var(--color-rule-soft);
+  }
+
+  .panel {
+    background: var(--color-ivory);
+    border: 1px solid var(--color-rule-soft);
+  }
+
+  /* Dense institutional table. */
+  .grid-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  .grid-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--color-paper);
+    border-bottom: 1px solid var(--color-rule);
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+    text-align: left;
+    padding: 7px 10px;
+    white-space: nowrap;
+  }
+  .grid-table tbody td {
+    border-bottom: 1px solid var(--color-rule-soft);
+    padding: 8px 10px;
+    vertical-align: middle;
+  }
+  .grid-table tbody tr:hover {
+    background: var(--color-paper);
+  }
+
+  .link-quiet {
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-rule);
+  }
+  .link-quiet:hover {
+    border-bottom-color: var(--color-graphite);
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Print — opportunity memos and IC packs must look like a real document. */
+@media print {
+  @page {
+    margin: 16mm 14mm;
+    size: A4;
+  }
+  body {
+    background: #fff;
+    font-size: 10.5pt;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-block {
+    break-inside: avoid;
+  }
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+}

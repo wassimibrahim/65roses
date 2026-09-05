@@ -1,0 +1,1506 @@
+// TERRA OS — Education Capital Intelligence & Transaction Operating System
+// Prisma schema. See PRODUCT.md for the data-model narrative.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ACCESS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Role {
+  MANAGING_PARTNER
+  PARTNER
+  ASSOCIATE
+  ANALYST
+  ADMIN
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role     @default(ANALYST)
+  title        String?
+  initials     String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  personId String? @unique
+  person   Person? @relation(fields: [personId], references: [id])
+
+  ownedRelationships Relationship[]    @relation("RelationshipOwner")
+  ownedOpportunities Opportunity[]     @relation("OpportunityOwner")
+  ledDeals           Deal[]            @relation("DealLeadPartner")
+  analystDeals       Deal[]            @relation("DealAnalyst")
+  ownedMandates      InvestorMandate[] @relation("MandateOwner")
+  interactions       Interaction[]     @relation("InteractionLogger")
+  notes              Note[]
+  tasks              Task[]            @relation("TaskAssignee")
+  auditLogs          AuditLog[]
+  savedViews         SavedView[]
+  overrides          ScoreOverride[]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EVIDENCE — the source / inference discipline (spec §33)
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum Confidence {
+  VERIFIED
+  HIGH_CONFIDENCE
+  ESTIMATED
+  UNVERIFIED
+}
+
+/// How an assertion may be presented in the UI. Never blurred.
+enum AssertionClass {
+  FACT
+  ESTIMATE
+  SIGNAL
+  TERRA_HYPOTHESIS
+}
+
+model Source {
+  id        String    @id @default(cuid())
+  name      String
+  url       String?
+  publisher String?
+  sourcedAt DateTime?
+  kind      String? // registry / press / website / management / conversation / broker
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  evidence DataFieldEvidence[]
+  signals  Signal[]
+  intel    IntelligenceItem[]
+  comps    TransactionComparable[]
+}
+
+/// One assertion about one field of one entity, with its provenance.
+model DataFieldEvidence {
+  id           String         @id @default(cuid())
+  entityType   String // EducationInstitution | Property | Organisation | Person | ...
+  entityId     String
+  field        String // e.g. "students", "ownerName", "propertyValueEstimate"
+  value        String
+  assertion    AssertionClass @default(FACT)
+  confidence   Confidence     @default(UNVERIFIED)
+  sourceId     String?
+  source       Source?        @relation(fields: [sourceId], references: [id])
+  verifiedBy   String?
+  verifiedAt   DateTime?
+  lastReviewed DateTime?
+  note         String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([entityType, entityId])
+  @@index([entityType, entityId, field])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ATLAS — institutions, campuses, property
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum InstitutionType {
+  EARLY_YEARS
+  K12
+  INTERNATIONAL_SCHOOL
+  BRITISH_SCHOOL
+  AMERICAN_SCHOOL
+  IB_SCHOOL
+  BILINGUAL_SCHOOL
+  VOCATIONAL
+  HIGHER_EDUCATION
+  UNIVERSITY
+  BUSINESS_SCHOOL
+  LANGUAGE_SCHOOL
+  SPECIAL_EDUCATION
+  EDTECH
+  TRAINING
+}
+
+enum OwnershipType {
+  FOUNDER
+  FAMILY
+  FOUNDATION
+  RELIGIOUS
+  INSTITUTIONAL
+  PE_BACKED
+  OPERATOR
+  GOVERNMENT
+  UNKNOWN
+}
+
+enum Generation {
+  FIRST
+  SECOND
+  THIRD_PLUS
+  INSTITUTIONAL
+  UNKNOWN
+}
+
+enum SuccessionStatus {
+  UNKNOWN
+  FOUNDER_LED
+  NEXT_GENERATION_ACTIVE
+  PROFESSIONAL_MANAGEMENT
+  POTENTIAL_SUCCESSION_ISSUE
+  TRANSITION_UNDERWAY
+}
+
+enum Tenure {
+  OWNED
+  LEASED
+  MIXED
+  UNKNOWN
+}
+
+model EducationInstitution {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  name      String
+  legalName String?
+  website   String?
+
+  country     String
+  region      String?
+  city        String?
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  foundedYear Int?
+
+  type           InstitutionType
+  curriculum     String[]        @default([])
+  languages      String[]        @default([])
+  accreditations String[]        @default([])
+  campusCount    Int             @default(1)
+
+  students            Int?
+  capacity            Int?
+  utilisation         Float? // 0..1 — derived when students & capacity known
+  tuitionLow          Float?
+  tuitionHigh         Float?
+  tuitionAverage      Float?
+  employees           Int?
+  teachers            Int?
+  studentTeacherRatio Float?
+
+  ownershipType    OwnershipType    @default(UNKNOWN)
+  ownerNames       String[]         @default([])
+  familyName       String?
+  generation       Generation       @default(UNKNOWN)
+  founderAge       Int?
+  successionStatus SuccessionStatus @default(UNKNOWN)
+
+  tenure Tenure @default(UNKNOWN)
+
+  /// Short institutional description used across the product.
+  summary String?
+  /// Illustrative demo record — never presented as verified market fact.
+  isDemo  Boolean @default(true)
+
+  organisationId String?
+  organisation   Organisation? @relation("OrganisationInstitutions", fields: [organisationId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  campuses        Campus[]
+  properties      Property[]
+  ownershipStakes OwnershipStake[]
+  financials      FinancialRecord[]
+  projections     Projection[]
+  valuations      Valuation[]
+  opportunities   Opportunity[]
+  signals         Signal[]
+  matches         Match[]
+  relationships   Relationship[]
+  interactions    Interaction[]
+  riskFlags       RiskFlag[]
+  documents       Document[]
+  notes           Note[]
+  tasks           Task[]
+  founderProfile  FounderProfile?
+  structures      StructureScenario[]
+  dealAssets      DealAsset[]
+  intelLinks      IntelligenceLink[]
+  scoreOverride   ScoreOverride?
+
+  @@index([country, city])
+  @@index([type])
+  @@index([ownershipType])
+}
+
+model Campus {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  name      String
+  city      String?
+  address   String?
+  latitude  Float?
+  longitude Float?
+  students  Int?
+  capacity  Int?
+  isPrimary Boolean @default(false)
+  tenure    Tenure  @default(UNKNOWN)
+
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([institutionId])
+}
+
+enum RealEstateTag {
+  PROPCO_SEPARATION_POSSIBLE
+  SALE_LEASEBACK_CANDIDATE
+  INSTITUTIONAL_RE_BUYER_CANDIDATE
+  EXPANSION_CAPEX_REQUIRED
+  UNDERUTILISED_PROPERTY
+  RELOCATION_OPPORTUNITY
+  DEVELOPMENT_OPPORTUNITY
+}
+
+model Property {
+  id            String                @id @default(cuid())
+  institutionId String?
+  institution   EducationInstitution? @relation(fields: [institutionId], references: [id])
+
+  name    String
+  city    String?
+  address String?
+  country String?
+
+  tenure        Tenure        @default(UNKNOWN)
+  propertyOwner String?
+  /// The PropCo / landlord entity where known.
+  ownerOrgId    String?
+  ownerOrg      Organisation? @relation("PropertyOwner", fields: [ownerOrgId], references: [id])
+
+  landAreaSqm        Float?
+  builtAreaSqm       Float?
+  plotSizeSqm        Float?
+  siteCount          Int       @default(1)
+  valueEstimateLow   Float?
+  valueEstimateHigh  Float?
+  annualRent         Float?
+  leaseExpiry        DateTime?
+  leaseTermYears     Float?
+  indexation         String?
+  marketRentEstimate Float?
+  rentToRevenue      Float?
+  rentToEbitda       Float?
+  zoningNotes        String?
+  expansionPotential String?
+  adjacentLand       Boolean?
+  condition          String?
+  maintenanceCapex   Float?
+  redevelopmentValue Float?
+
+  tags RealEstateTag[] @default([])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  campuses   Campus[]
+  dealAssets DealAsset[]
+
+  @@index([institutionId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FINANCIALS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum FinancialBasis {
+  REPORTED
+  MANAGEMENT
+  TERRA_ESTIMATE
+  DERIVED
+  MARKET_ASSUMPTION
+}
+
+model FinancialRecord {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  year     Int
+  basis    FinancialBasis @default(TERRA_ESTIMATE)
+  currency String         @default("EUR")
+
+  revenue        Float?
+  revenueGrowth  Float?
+  ebitda         Float?
+  ebitdaMargin   Float?
+  ebit           Float?
+  netIncome      Float?
+  netDebt        Float?
+  cash           Float?
+  capex          Float?
+  workingCapital Float?
+  students       Int?
+  averageTuition Float?
+  rent           Float?
+
+  note      String?
+  sourceRef String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([institutionId, year, basis])
+  @@index([institutionId])
+}
+
+enum Scenario {
+  DOWNSIDE
+  BASE
+  UPSIDE
+}
+
+model Projection {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  scenario    Scenario @default(BASE)
+  name        String   @default("Base case")
+  /// Underwriting assumptions — validated by UnderwritingAssumptionsSchema.
+  assumptions Json
+  /// Cached model output. Recomputed by the underwriting engine on save.
+  output      Json?
+  isDefault   Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([institutionId])
+}
+
+enum ValuationMethod {
+  TRADING_COMPARABLES
+  TRANSACTION_COMPARABLES
+  EV_REVENUE
+  EV_EBITDA
+  DCF
+  REAL_ESTATE
+  SUM_OF_THE_PARTS
+}
+
+model Valuation {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  method      ValuationMethod
+  low         Float
+  high        Float
+  currency    String          @default("EUR")
+  /// Assumption trail. Every valuation shows its workings.
+  assumptions Json?
+  note        String?
+  asOf        DateTime        @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([institutionId])
+}
+
+model TransactionComparable {
+  id                 String          @id @default(cuid())
+  target             String
+  buyer              String
+  country            String
+  date               DateTime
+  segment            InstitutionType
+  ev                 Float?
+  revenue            Float?
+  ebitda             Float?
+  evRevenue          Float?
+  evEbitda           Float?
+  realEstateIncluded Boolean         @default(false)
+  sourceId           String?
+  source             Source?         @relation(fields: [sourceId], references: [id])
+  notes              String?
+  isDemo             Boolean         @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([country])
+  @@index([segment])
+}
+
+model InvestmentReturnScenario {
+  id            String  @id @default(cuid())
+  dealId        String?
+  deal          Deal?   @relation(fields: [dealId], references: [id])
+  institutionId String?
+
+  name            String
+  entryEv         Float
+  entryDebt       Float
+  entryEbitda     Float
+  revenueCagr     Float
+  marginExpansion Float
+  holdYears       Int    @default(5)
+  exitMultiple    Float
+  exitNetDebt     Float?
+  /// Cached output from the returns engine.
+  output          Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TransactionType {
+  FULL_SALE
+  OPCO_SALE
+  PROPCO_SALE
+  SALE_LEASEBACK
+  MAJORITY_PARTNERSHIP
+  MINORITY_GROWTH
+  RECAPITALISATION
+  JV_EXPANSION
+}
+
+model StructureScenario {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  type        TransactionType
+  label       String
+  assumptions Json
+  output      Json?
+  note        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([institutionId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FOUNDER LEGACY
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum FounderObjective {
+  MAXIMUM_VALUATION
+  PARTIAL_LIQUIDITY
+  MAINTAIN_NAME
+  MAINTAIN_CURRICULUM
+  FAMILY_INVOLVEMENT
+  EMPLOYEE_CONTINUITY
+  REAL_ESTATE_RETENTION
+  REMAIN_CHAIRMAN
+  GROWTH_CAPITAL
+  LONG_TERM_STEWARDSHIP
+}
+
+model FounderProfile {
+  id            String               @id @default(cuid())
+  institutionId String               @unique
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  founderPersonId String?
+  founderPerson   Person? @relation(fields: [founderPersonId], references: [id])
+
+  narrative  String?
+  /// Ranked objectives, most important first.
+  objectives FounderObjectiveRank[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FounderObjectiveRank {
+  id        String         @id @default(cuid())
+  profileId String
+  profile   FounderProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  objective FounderObjective
+  rank      Int
+  weight    Float            @default(1)
+  note      String?
+
+  @@unique([profileId, objective])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ORGANISATIONS — investors, operators, advisors, landlords
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum OrganisationType {
+  PRIVATE_EQUITY
+  INFRASTRUCTURE_FUND
+  FAMILY_OFFICE
+  EDUCATION_OPERATOR
+  REAL_ESTATE_INVESTOR
+  REIT
+  PENSION_FUND
+  SOVEREIGN_WEALTH_FUND
+  INSTITUTIONAL_INVESTOR
+  BANK
+  LAW_FIRM
+  ACCOUNTANT
+  ADVISOR
+  LANDLORD
+  FOUNDATION
+  FAMILY_HOLDING
+  OTHER
+}
+
+model Organisation {
+  id                  String           @id @default(cuid())
+  slug                String           @unique
+  name                String
+  type                OrganisationType
+  hq                  String?
+  country             String?
+  website             String?
+  aum                 Float?
+  aumNote             String?
+  countriesActive     String[]         @default([])
+  educationExposure   String?
+  relevantInvestments String[]         @default([])
+  summary             String?
+  /// Clearly-labelled public operator example vs fictional demo entity.
+  isPublicExample     Boolean          @default(false)
+  isDemo              Boolean          @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  institutions     EducationInstitution[] @relation("OrganisationInstitutions")
+  ownedProperties  Property[]             @relation("PropertyOwner")
+  mandates         InvestorMandate[]
+  people           Person[]
+  ownershipStakes  OwnershipStake[]
+  relationships    Relationship[]
+  interactions     Interaction[]
+  buyerEntries     BuyerUniverseEntry[]
+  dealParticipants DealParticipant[]
+  documents        Document[]
+  notes            Note[]
+  tasks            Task[]
+  intelLinks       IntelligenceLink[]
+  clientDeals      Deal[]                 @relation("DealClientOrg")
+
+  @@index([type])
+}
+
+enum MandateStatus {
+  ACTIVE
+  PAUSED
+  FULFILLED
+  LAPSED
+  EXPLORATORY
+}
+
+enum ControlPreference {
+  CONTROL
+  MAJORITY
+  MINORITY
+  FLEXIBLE
+}
+
+enum PropertyPreference {
+  PROPERTY_LIGHT
+  PROPERTY_HEAVY
+  REQUIRES_OWNED
+  INDIFFERENT
+}
+
+model InvestorMandate {
+  id             String       @id @default(cuid())
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  name              String
+  status            MandateStatus @default(ACTIVE)
+  isActive          Boolean       @default(true)
+  startDate         DateTime?
+  lastConfirmed     DateTime?
+  ownerUserId       String?
+  owner             User?         @relation("MandateOwner", fields: [ownerUserId], references: [id])
+  strategy          String?
+  confidentialNotes String?
+  notes             String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  criteria BuyerCriteria?
+  matches  Match[]
+
+  @@index([organisationId])
+  @@index([status])
+}
+
+model BuyerCriteria {
+  id        String          @id @default(cuid())
+  mandateId String          @unique
+  mandate   InvestorMandate @relation(fields: [mandateId], references: [id], onDelete: Cascade)
+
+  minEv              Float?
+  maxEv              Float?
+  minEbitda          Float?
+  maxEbitda          Float?
+  equityCheque       Float?
+  targetOwnershipPct Float?
+  control            ControlPreference @default(FLEXIBLE)
+
+  countries   String[]          @default([])
+  regions     String[]          @default([])
+  segments    InstitutionType[] @default([])
+  curricula   String[]          @default([])
+  minStudents Int?
+  maxStudents Int?
+
+  propertyPreference    PropertyPreference @default(INDIFFERENT)
+  requiresOwnedProperty Boolean            @default(false)
+  leaseAcceptable       Boolean            @default(true)
+
+  returnTarget     Float?
+  holdingPeriod    Int?
+  platformStrategy String? // PLATFORM | ADD_ON | BOTH
+  esgRequirements  String?
+  otherNotes       String?
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PEOPLE, OWNERSHIP, RELATIONSHIPS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Family {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members Person[]
+}
+
+model Person {
+  id                    String   @id @default(cuid())
+  slug                  String   @unique
+  firstName             String
+  lastName              String
+  title                 String?
+  email                 String?
+  phone                 String?
+  linkedin              String?
+  languages             String[] @default([])
+  location              String?
+  /// Professionally relevant only. No sensitive personal data.
+  professionalInterests String[] @default([])
+  notes                 String?
+  introducedById        String?
+  introducedBy          Person?  @relation("IntroducedBy", fields: [introducedById], references: [id])
+  isInternal            Boolean  @default(false)
+  isDemo                Boolean  @default(true)
+
+  organisationId String?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  familyId       String?
+  family         Family?       @relation(fields: [familyId], references: [id])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user              User?
+  introduced        Person[]                 @relation("IntroducedBy")
+  ownershipStakes   OwnershipStake[]
+  relationshipsFrom Relationship[]           @relation("RelationshipFrom")
+  relationshipsTo   Relationship[]           @relation("RelationshipTo")
+  interactions      InteractionParticipant[]
+  founderProfiles   FounderProfile[]
+  dealParticipants  DealParticipant[]
+  notesAuthored     Note[]
+  documents         Document[]
+  intelLinks        IntelligenceLink[]
+
+  @@index([organisationId])
+  @@index([lastName])
+}
+
+model OwnershipStake {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  personId       String?
+  person         Person?       @relation(fields: [personId], references: [id])
+  organisationId String?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  holderName     String?
+
+  percentage Float?
+  role       String? // Founder / Shareholder / Trustee
+  from       DateTime?
+  to         DateTime? // null = current. Historical ownership is preserved.
+  confidence Confidence @default(ESTIMATED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([institutionId])
+}
+
+enum RelationshipKind {
+  KNOWS
+  ADVISES
+  OWNS
+  WORKS_AT
+  FAMILY
+  BACKED_BY
+  LANDLORD_OF
+  INTRODUCED
+  CLIENT_OF
+  BOARD_OF
+}
+
+model Relationship {
+  id String @id @default(cuid())
+
+  fromPersonId String
+  fromPerson   Person @relation("RelationshipFrom", fields: [fromPersonId], references: [id], onDelete: Cascade)
+
+  toPersonId       String?
+  toPerson         Person?               @relation("RelationshipTo", fields: [toPersonId], references: [id])
+  toOrganisationId String?
+  toOrganisation   Organisation?         @relation(fields: [toOrganisationId], references: [id])
+  toInstitutionId  String?
+  toInstitution    EducationInstitution? @relation(fields: [toInstitutionId], references: [id])
+
+  kind     RelationshipKind @default(KNOWS)
+  /// 1 none · 2 weak · 3 known · 4 warm · 5 trusted
+  strength Int              @default(1)
+
+  ownerUserId String?
+  owner       User?   @relation("RelationshipOwner", fields: [ownerUserId], references: [id])
+
+  origin              String?
+  lastInteractionAt   DateTime?
+  nextFollowUpAt      DateTime?
+  notes               String?
+  partnerConfidential Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([fromPersonId])
+  @@index([toInstitutionId])
+  @@index([toOrganisationId])
+}
+
+enum InteractionType {
+  CALL
+  MEETING
+  EMAIL
+  INTRODUCTION
+  DINNER
+  CONFERENCE
+  NOTE
+  DOCUMENT_SENT
+  NDA
+  PROPOSAL
+  MANDATE
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  CAUTIOUS
+  NEGATIVE
+}
+
+model Interaction {
+  id   String          @id @default(cuid())
+  type InteractionType
+  date DateTime
+
+  summary             String
+  nextStep            String?
+  followUpDate        DateTime?
+  sentiment           Sentiment @default(NEUTRAL)
+  partnerConfidential Boolean   @default(false)
+
+  loggedByUserId String?
+  loggedBy       User?   @relation("InteractionLogger", fields: [loggedByUserId], references: [id])
+
+  institutionId  String?
+  institution    EducationInstitution? @relation(fields: [institutionId], references: [id])
+  organisationId String?
+  organisation   Organisation?         @relation(fields: [organisationId], references: [id])
+  dealId         String?
+  deal           Deal?                 @relation(fields: [dealId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  participants InteractionParticipant[]
+
+  @@index([date])
+  @@index([institutionId])
+  @@index([organisationId])
+}
+
+model InteractionParticipant {
+  interactionId String
+  interaction   Interaction @relation(fields: [interactionId], references: [id], onDelete: Cascade)
+  personId      String
+  person        Person      @relation(fields: [personId], references: [id], onDelete: Cascade)
+  role          String?
+
+  @@id([interactionId, personId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ORIGINATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum PipelineStage {
+  LEAD
+  QUALIFIED
+  MANDATE_DISCUSSION
+  ENGAGED
+  PREPARATION
+  MARKETED
+  IOI
+  LOI
+  DUE_DILIGENCE
+  SIGNING
+  CLOSING
+  CLOSED
+  LOST
+  PAUSED
+}
+
+enum OpportunitySource {
+  FOUNDER_INBOUND
+  INVESTOR_REQUEST
+  OPERATOR_MANDATE
+  RELATIONSHIP_REFERRAL
+  TERRA_RESEARCH
+  BROKER
+  LAWYER
+  ACCOUNTANT
+  BANK
+  REAL_ESTATE_CONTACT
+  CONFERENCE
+  OTHER
+}
+
+model Opportunity {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  name  String
+  stage PipelineStage @default(LEAD)
+
+  transactionType TransactionType?
+  estimatedEvLow  Float?
+  estimatedEvHigh Float?
+
+  ownerUserId String?
+  owner       User?   @relation("OpportunityOwner", fields: [ownerUserId], references: [id])
+
+  /// 1–3 sentences. The analyst must justify approaching now.
+  whyNow             String?
+  nextAction         String?
+  nextActionDate     DateTime?
+  lastContactAt      DateTime?
+  mandateProbability Float? // 0..1
+  source             OpportunitySource @default(TERRA_RESEARCH)
+  sourceNote         String?
+  thesis             String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  deal Deal?
+
+  @@index([stage])
+  @@index([institutionId])
+}
+
+/// A partner may override the computed score. Rationale is mandatory — it is
+/// how institutional judgment re-enters the system.
+model ScoreOverride {
+  id            String               @id @default(cuid())
+  institutionId String               @unique
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+
+  score     Int
+  rationale String
+  userId    String
+  user      User   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SIGNALS & INTELLIGENCE
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum SignalType {
+  LEADERSHIP_CHANGE
+  FOUNDER_RETIREMENT
+  NEW_CEO
+  NEW_FAMILY_MEMBER_IN_MANAGEMENT
+  CAMPUS_EXPANSION
+  NEW_CAMPUS
+  TUITION_CHANGE
+  ACCREDITATION
+  PROPERTY_ACQUISITION
+  PROPERTY_SALE
+  CAPITAL_RAISE
+  REFINANCING
+  OPERATOR_ACQUISITION
+  COMPETITOR_ACQUISITION
+  ENROLLMENT_GROWTH
+  ENROLLMENT_DECLINE
+  REGULATORY_CHANGE
+  MEDIA_MENTION
+  JOB_POSTING_GROWTH
+  STRATEGIC_PARTNERSHIP
+}
+
+enum SignalStrength {
+  WEAK
+  MODERATE
+  STRONG
+}
+
+model Signal {
+  id   String     @id @default(cuid())
+  type SignalType
+  date DateTime
+
+  institutionId String?
+  institution   EducationInstitution? @relation(fields: [institutionId], references: [id])
+  entityLabel   String
+
+  headline   String
+  detail     String?
+  sourceId   String?
+  source     Source?        @relation(fields: [sourceId], references: [id])
+  confidence Confidence     @default(UNVERIFIED)
+  strength   SignalStrength @default(MODERATE)
+
+  /// Terra's reading of the signal. Always rendered as hypothesis, never fact.
+  interpretation         String?
+  transactionImplication String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([date])
+  @@index([institutionId])
+}
+
+enum IntelligenceCategory {
+  TRANSACTIONS
+  OPERATORS
+  INVESTORS
+  REAL_ESTATE
+  REGULATION
+  MARKET_DATA
+  EDUCATION_TRENDS
+}
+
+model IntelligenceItem {
+  id       String               @id @default(cuid())
+  category IntelligenceCategory
+  title    String
+  summary  String
+  body     String?
+  date     DateTime
+  country  String?
+  sourceId String?
+  source   Source?              @relation(fields: [sourceId], references: [id])
+  isDemo   Boolean              @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  links IntelligenceLink[]
+
+  @@index([category])
+  @@index([date])
+}
+
+model IntelligenceLink {
+  id     String           @id @default(cuid())
+  itemId String
+  item   IntelligenceItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  institutionId  String?
+  institution    EducationInstitution? @relation(fields: [institutionId], references: [id])
+  organisationId String?
+  organisation   Organisation?         @relation(fields: [organisationId], references: [id])
+  personId       String?
+  person         Person?               @relation(fields: [personId], references: [id])
+  note           String?
+
+  @@index([itemId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MATCHING
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Match {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   EducationInstitution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  mandateId     String
+  mandate       InvestorMandate      @relation(fields: [mandateId], references: [id], onDelete: Cascade)
+
+  score      Int
+  /// Per-dimension breakdown + reasons + issues, from the match engine.
+  breakdown  Json
+  computedAt DateTime @default(now())
+
+  /// Analyst may suppress a match; rationale required.
+  suppressed Boolean @default(false)
+  rationale  String?
+
+  @@unique([institutionId, mandateId])
+  @@index([score])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DEALS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Deal {
+  id       String @id @default(cuid())
+  slug     String @unique
+  codeName String // "Project Cervantes"
+
+  transactionType TransactionType
+  stage           PipelineStage   @default(ENGAGED)
+
+  clientOrgId String?
+  clientOrg   Organisation? @relation("DealClientOrg", fields: [clientOrgId], references: [id])
+  clientLabel String?
+
+  opportunityId String?      @unique
+  opportunity   Opportunity? @relation(fields: [opportunityId], references: [id])
+
+  leadPartnerId String?
+  leadPartner   User?   @relation("DealLeadPartner", fields: [leadPartnerId], references: [id])
+  analystId     String?
+  analyst       User?   @relation("DealAnalyst", fields: [analystId], references: [id])
+
+  expectedEv   Float?
+  expectedFee  Float?
+  feeStructure String?
+  probability  Float? // 0..1
+  targetClose  DateTime?
+  keyBlocker   String?
+  restricted   Boolean   @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  assets        DealAsset[]
+  participants  DealParticipant[]
+  stageHistory  DealStageHistory[]
+  buyerUniverse BuyerUniverseEntry[]
+  processItems  ProcessItem[]
+  documents     Document[]
+  tasks         Task[]
+  notes         Note[]
+  interactions  Interaction[]
+  returns       InvestmentReturnScenario[]
+  stakeholders  StakeholderContinuity[]
+  riskFlags     RiskFlag[]
+
+  @@index([stage])
+}
+
+model DealAsset {
+  id     String @id @default(cuid())
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  institutionId String?
+  institution   EducationInstitution? @relation(fields: [institutionId], references: [id])
+  propertyId    String?
+  property      Property?             @relation(fields: [propertyId], references: [id])
+  label         String?
+
+  @@index([dealId])
+}
+
+enum DealRole {
+  CLIENT
+  FOUNDER
+  BUYER
+  INVESTOR
+  LEGAL
+  ACCOUNTING
+  BANK
+  LANDLORD
+  ADVISOR
+  OTHER
+}
+
+model DealParticipant {
+  id     String @id @default(cuid())
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  personId       String?
+  person         Person?       @relation(fields: [personId], references: [id])
+  organisationId String?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  role           DealRole      @default(OTHER)
+  note           String?
+
+  @@index([dealId])
+}
+
+model DealStageHistory {
+  id        String        @id @default(cuid())
+  dealId    String
+  deal      Deal          @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  stage     PipelineStage
+  enteredAt DateTime
+  exitedAt  DateTime?
+  note      String?
+  changedBy String?
+
+  @@index([dealId])
+}
+
+enum BuyerStage {
+  LONGLIST
+  APPROVED
+  CONTACTED
+  NDA
+  CIM
+  IOI
+  MANAGEMENT_MEETING
+  LOI
+  DILIGENCE
+  SELECTED
+  REJECTED
+}
+
+model BuyerUniverseEntry {
+  id     String @id @default(cuid())
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id])
+
+  stage                BuyerStage @default(LONGLIST)
+  strategicRationale   String?
+  financialCapability  String?
+  relationshipStrength Int? // 1..5
+  fitScore             Int?
+  contactPersonId      String?
+  ndaSignedAt          DateTime?
+  teaserSentAt         DateTime?
+  cimSentAt            DateTime?
+  ioiAt                DateTime?
+  ioiValue             Float?
+  loiAt                DateTime?
+  loiValue             Float?
+  notes                String?
+  sortIndex            Int        @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([dealId, organisationId])
+  @@index([dealId, stage])
+}
+
+enum ProcessItemStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  COMPLETE
+  NOT_APPLICABLE
+}
+
+model ProcessItem {
+  id     String @id @default(cuid())
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  label     String
+  status    ProcessItemStatus @default(NOT_STARTED)
+  dueDate   DateTime?
+  ownerName String?
+  critical  Boolean           @default(false)
+  sortIndex Int               @default(0)
+  note      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealId])
+}
+
+enum StakeholderGroup {
+  STUDENTS
+  TEACHERS_STAFF
+  FAMILIES
+  COMMUNITY
+  FOUNDER_LEGACY
+}
+
+model StakeholderContinuity {
+  id     String @id @default(cuid())
+  dealId String
+  deal   Deal   @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  group      StakeholderGroup
+  impact     String?
+  risk       String?
+  mitigation String?
+
+  @@unique([dealId, group])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RISK
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum RiskType {
+  ENROLLMENT_DECLINE
+  CUSTOMER_CONCENTRATION
+  FOUNDER_DEPENDENCY
+  LEASE_EXPIRY
+  PROPERTY_CONSTRAINT
+  REGULATORY
+  ACCREDITATION
+  HIGH_CAPEX
+  WEAK_MARGINS
+  SUCCESSION
+  GOVERNANCE
+  REPUTATION
+  AFFORDABILITY
+  STAFF_TURNOVER
+}
+
+enum RiskSeverity {
+  LOW
+  MODERATE
+  HIGH
+  CRITICAL
+}
+
+model RiskFlag {
+  id String @id @default(cuid())
+
+  institutionId String?
+  institution   EducationInstitution? @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  dealId        String?
+  deal          Deal?                 @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  type       RiskType
+  severity   RiskSeverity @default(MODERATE)
+  /// Rationale is mandatory. A flag without a reason is noise.
+  rationale  String
+  mitigation String?
+  raisedBy   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([institutionId])
+  @@index([dealId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOCUMENTS, NOTES, TASKS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum DocumentType {
+  TEASER
+  CIM
+  NDA
+  FINANCIAL_MODEL
+  VALUATION
+  MARKET_RESEARCH
+  LEGAL
+  REAL_ESTATE
+  BOARD_MATERIALS
+  INVESTMENT_COMMITTEE
+  OFFER
+  SPA
+  LEASE
+  OTHER
+}
+
+model Document {
+  id    String       @id @default(cuid())
+  title String
+  type  DocumentType @default(OTHER)
+
+  institutionId  String?
+  institution    EducationInstitution? @relation(fields: [institutionId], references: [id])
+  organisationId String?
+  organisation   Organisation?         @relation(fields: [organisationId], references: [id])
+  personId       String?
+  person         Person?               @relation(fields: [personId], references: [id])
+  dealId         String?
+  deal           Deal?                 @relation(fields: [dealId], references: [id])
+
+  /// MVP: metadata only. Storage provider is pluggable — see src/lib/providers.
+  storageKey   String?
+  mimeType     String?
+  sizeBytes    Int?
+  version      String?
+  confidential Boolean @default(false)
+  uploadedBy   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealId])
+  @@index([institutionId])
+}
+
+model Note {
+  id   String @id @default(cuid())
+  body String
+
+  authorUserId   String?
+  author         User?   @relation(fields: [authorUserId], references: [id])
+  authorPersonId String?
+  authorPerson   Person? @relation(fields: [authorPersonId], references: [id])
+
+  institutionId  String?
+  institution    EducationInstitution? @relation(fields: [institutionId], references: [id])
+  organisationId String?
+  organisation   Organisation?         @relation(fields: [organisationId], references: [id])
+  dealId         String?
+  deal           Deal?                 @relation(fields: [dealId], references: [id])
+
+  partnerConfidential Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum TaskStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+}
+
+model Task {
+  id       String     @id @default(cuid())
+  title    String
+  detail   String?
+  status   TaskStatus @default(OPEN)
+  priority Priority   @default(NORMAL)
+  dueDate  DateTime?
+
+  assigneeId String?
+  assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
+
+  institutionId  String?
+  institution    EducationInstitution? @relation(fields: [institutionId], references: [id])
+  organisationId String?
+  organisation   Organisation?         @relation(fields: [organisationId], references: [id])
+  dealId         String?
+  deal           Deal?                 @relation(fields: [dealId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PLATFORM
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  action        String // CREATE | UPDATE | DELETE | VIEW_RESTRICTED | OVERRIDE
+  entityType    String
+  entityId      String
+  field         String?
+  previousValue String?
+  newValue      String?
+  context       String?
+  createdAt     DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+model SavedView {
+  id     String  @id @default(cuid())
+  key    String
+  label  String
+  module String // atlas | origination | investors | deals
+  query  Json
+  shared Boolean @default(true)
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([module, key])
+}
+
+model ScoringWeights {
+  id        String   @id @default(cuid())
+  label     String   @unique
+  isDefault Boolean  @default(false)
+  weights   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
