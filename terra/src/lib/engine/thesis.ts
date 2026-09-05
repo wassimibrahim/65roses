@@ -34,6 +34,8 @@ export interface ThesisInput {
   opcoValuation: { low: number; high: number } | null;
   propcoValuation: { low: number; high: number } | null;
   recentSignals: { headline: string; date: Date | string }[];
+  /** Risk flags already recorded against the asset. */
+  riskFlags: { type: string; severity: string; rationale: string }[];
 }
 
 export interface Thesis {
@@ -101,11 +103,15 @@ export function buildThesis(input: ThesisInput): Thesis {
     rationale.push("The institution receives growth capital without a change of identity.");
     rationale.push("The founder takes substantial liquidity now rather than all of it at once.");
     if (owned) rationale.push("Campus ownership can be monetised separately from the operating company.");
+    risks.push(
+      "The retained minority becomes illiquid and its value depends on the investor's exit, not the family's timing.",
+    );
   } else if (structureType === "SALE_LEASEBACK") {
     rationale.push("Liquidity is available without selling any part of the school itself.");
     rationale.push("The next generation continues to run the institution unchanged.");
     rationale.push("An institutional landlord underwrites the campus on a long indexed lease.");
     risks.push("A permanent rent line reduces reported EBITDA and constrains future flexibility.");
+    risks.push("Institutional buyers want 20–25 year terms; families rarely want to commit that far.");
   } else if (structureType === "FULL_SALE") {
     rationale.push("Ownership has no evident continuity plan; a clean transfer is the simplest outcome.");
     rationale.push("A single process captures the full value of both the operations and the estate.");
@@ -113,6 +119,7 @@ export function buildThesis(input: ThesisInput): Thesis {
   } else if (structureType === "PROPCO_SALE") {
     rationale.push("The operating institution continues under existing management.");
     rationale.push("Only the freehold changes hands, releasing capital held in the estate.");
+    risks.push("The school takes on a rent it has never paid; covenant headroom has to be proven.");
   } else if (structureType === "MINORITY_GROWTH") {
     rationale.push("Capital funds expansion while control and identity stay with the family.");
     risks.push("Minority positions require carefully drafted governance and exit rights.");
@@ -139,6 +146,14 @@ export function buildThesis(input: ThesisInput): Thesis {
   }
   if (owned && propco.length === 0) {
     risks.push("No institutional property buyer is currently mandated for this geography.");
+  }
+
+  // Risks already recorded against the asset belong here too — the thesis must
+  // not read as clean while the profile carries high-severity flags.
+  for (const flag of input.riskFlags) {
+    if (flag.severity === "HIGH" || flag.severity === "CRITICAL") {
+      risks.push(flag.rationale);
+    }
   }
 
   if (input.accessTier === "COLD") {

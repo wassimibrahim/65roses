@@ -105,6 +105,11 @@ export async function analyseOpportunity(slug: string): Promise<OpportunityAnaly
     opcoValuation,
     propcoValuation,
     recentSignals: record.signals.slice(0, 5).map((s) => ({ headline: s.headline, date: s.date })),
+    riskFlags: record.riskFlags.map((r) => ({
+      type: r.type,
+      severity: r.severity,
+      rationale: r.rationale,
+    })),
   });
 
   return {
