@@ -12,6 +12,7 @@ import { Panel, PanelHeader, PanelBody, EmptyState } from "@/components/ui/panel
 import { RelationshipNetwork } from "@/components/relationships/network";
 import { StrengthMarks, ScoreBar } from "@/components/ui/score";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DemoNotice } from "@/components/ui/provenance";
 import { relativeDays, percent, date as fmtDate } from "@/lib/format";
 import { ACCESS_LABELS } from "@/lib/engine/graph";
@@ -71,6 +72,11 @@ export default async function RelationshipsPage({
             {percent(advantage.share.DIRECT + advantage.share.WARM_INTRODUCTION)} of the universe
             reachable warm or better
           </>
+        }
+        actions={
+          <Button variant="outline" size="sm" asChild>
+            <a href="/api/export/contacts">Export contacts</a>
+          </Button>
         }
       />
 

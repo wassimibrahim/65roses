@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { EntityTabs } from "@/components/atlas/entity-header";
 import { Panel, PanelHeader, PanelBody, EmptyState } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { StageChip } from "@/components/data/stage-chip";
 import { ScoreBar } from "@/components/ui/score";
 import { DefinitionGrid } from "@/components/data/definition-grid";
@@ -94,7 +95,14 @@ export default async function DealPage({
             ) : null}
           </span>
         }
-        actions={<StageChip stage={deal.stage} />}
+        actions={
+          <>
+            <Button variant="outline" size="sm" asChild>
+              <a href={`/api/export/buyers?deal=${deal.slug}`}>Export buyers</a>
+            </Button>
+            <StageChip stage={deal.stage} />
+          </>
+        }
       />
 
       <div className="flex flex-wrap items-center gap-x-8 gap-y-3 border-b border-rule-soft bg-paper px-6 py-3 md:px-8">

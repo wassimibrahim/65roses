@@ -4,6 +4,7 @@ import { compSetStats } from "@/lib/engine/valuation";
 import { PageHeader } from "@/components/shell/page-header";
 import { Panel, PanelHeader, PanelBody } from "@/components/ui/panel";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { DemoNotice } from "@/components/ui/provenance";
 import { money, multiple, monthYear } from "@/lib/format";
 import { humanise } from "@/lib/utils";
@@ -37,6 +38,11 @@ export default async function ComparablesPage() {
         ]}
         title="Precedent transactions"
         subtitle={`${comps.length} transactions · ${stats.evEbitda ? `${multiple(stats.evEbitda.low)}–${multiple(stats.evEbitda.high)} EV/EBITDA interquartile, median ${multiple(stats.evEbitda.median)}` : ""}`}
+        actions={
+          <Button variant="outline" size="sm" asChild>
+            <a href="/api/export/comparables">Export CSV</a>
+          </Button>
+        }
       />
 
       <div className="px-6 py-6 md:px-8">
