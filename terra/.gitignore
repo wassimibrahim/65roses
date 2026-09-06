@@ -8,3 +8,6 @@ build/
 next-env.d.ts
 .DS_Store
 coverage/
+
+# Screenshots captured for review; not part of the project.
+.screens/
