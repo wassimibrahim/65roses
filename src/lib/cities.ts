@@ -38,18 +38,27 @@ export const CITY_DEFAULTS: Record<
  * Which cities the landing page may speak. Beirut always; another only once a
  * night exists there that is not a draft. Nobody announces a city by editing a
  * constant — a city is announced by a night.
+ *
+ * If the database cannot be reached this answers BEIRUT. rather than throwing.
+ * The front door is the most public surface in the world and it must not show
+ * an error page because Postgres hiccupped; home is always true, and a missing
+ * second city is a quieter failure than a broken landing.
  */
 export async function announcedCities(db: Db, now: Date = new Date()): Promise<City[]> {
-  const rows = await db.event.findMany({
-    where: {
-      deletedAt: null,
-      status: { notIn: ["DRAFT", "CANCELLED"] },
-      endsAt: { gt: now },
-      city: { not: HOME_CITY },
-    },
-    distinct: ["city"],
-    select: { city: true },
-  });
+  try {
+    const rows = await db.event.findMany({
+      where: {
+        deletedAt: null,
+        status: { notIn: ["DRAFT", "CANCELLED"] },
+        endsAt: { gt: now },
+        city: { not: HOME_CITY },
+      },
+      distinct: ["city"],
+      select: { city: true },
+    });
 
-  return [HOME_CITY, ...rows.map((r) => r.city)];
+    return [HOME_CITY, ...rows.map((r) => r.city)];
+  } catch {
+    return [HOME_CITY];
+  }
 }

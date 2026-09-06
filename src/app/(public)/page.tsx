@@ -3,6 +3,11 @@
 // The home line is BEIRUT. A second city appears here only once it has a night,
 // and it appears as another line, never as a selector: she is not asked to
 // choose a city, she is told where the world is.
+//
+// That question is asked of the database, which makes this page dynamic. It
+// must not be prerendered at build time: a build machine has no database, and
+// a front door baked at build time would keep saying BEIRUT. for a month after
+// Madrid had a night.
 import { prisma } from "@/lib/db/client";
 import { announcedCities, CITY_LINE } from "@/lib/cities";
 import { copy } from "@/content/copy";
@@ -12,6 +17,8 @@ import { RoseMark } from "@/components/world/RoseMark";
 import { Serial } from "@/components/world/Serial";
 import { TextAction } from "@/components/ui/TextAction";
 import { FadeIn } from "@/components/ui/FadeIn";
+
+export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const cities = await announcedCities(prisma);
