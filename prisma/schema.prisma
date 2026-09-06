@@ -1,0 +1,845 @@
+// 65 ROSES — data model
+// Designed once for Phase 1 → Phase 5. Do not restructure in later phases.
+// 0065
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  MEMBER
+  DOOR
+  ADMIN
+  OWNER
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  WAITLIST
+  DECLINED
+}
+
+enum MemberStatus {
+  ACTIVE
+  QUIET
+  AT_RISK
+  PAUSED
+  DECLINED
+  SUSPENDED
+  INACTIVE
+}
+
+enum City {
+  BEIRUT
+  MADRID
+}
+
+enum EventStatus {
+  DRAFT
+  ANNOUNCED
+  INVITING
+  LOCKED
+  LIVE
+  CLOSED
+  CANCELLED
+}
+
+enum InvitationStatus {
+  SENT
+  VIEWED
+  RESPONDED
+  EXPIRED
+  REVOKED
+}
+
+enum RsvpResponse {
+  CONFIRMED
+  DECLINED
+  NO_RESPONSE
+}
+
+enum AttendanceOutcome {
+  PENDING
+  ATTENDED
+  NO_SHOW
+  DECLINED_EARLY
+  DECLINED_LATE
+  EXCUSED
+}
+
+enum CredentialType {
+  ROSE
+  STEM
+}
+
+enum CredentialStatus {
+  UNASSIGNED
+  ASSIGNED
+  ACTIVE
+  EXPIRED
+  LOST
+  REPLACED
+  REVOKED
+}
+
+enum DeliveryStatus {
+  PENDING_ADDRESS
+  ADDRESS_RECEIVED
+  PREPARING
+  READY
+  OUT_FOR_DELIVERY
+  DELIVERED
+  FAILED
+  RETURNED
+}
+
+enum PaymentStatus {
+  NONE
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentProviderKind {
+  STRIPE
+  WHISH
+  CASH
+  COMP
+}
+
+enum CheckInSubject {
+  ROSE
+  STEM
+}
+
+enum VerificationPurpose {
+  PHONE_VERIFY
+  LOGIN
+  DOOR_ENTRY
+  PHONE_CHANGE
+  STEM_VERIFY
+}
+
+enum ReferralStatus {
+  SUBMITTED
+  REVIEWING
+  INVITED
+  APPLIED
+  APPROVED
+  DECLINED
+}
+
+enum CommunityStatus {
+  NOT_INVITED
+  INVITED
+  JOINED
+  LEFT
+  REMOVED
+}
+
+enum MessageChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  INSTAGRAM_MANUAL
+}
+
+enum MessageStatus {
+  QUEUED
+  SENT
+  DELIVERED
+  FAILED
+  SKIPPED
+}
+
+// ─────────────────────────────────────────────────────────────
+// IDENTITY
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String? // argon2id
+  role          Role      @default(MEMBER)
+
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+
+  member    MemberProfile?
+  sessions  Session[]
+  auditLogs AuditLog[]     @relation("AuditActor")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([role])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  ip        String?
+  userAgent String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// APPLICATION
+// ─────────────────────────────────────────────────────────────
+
+model Application {
+  id String @id @default(cuid())
+
+  firstName       String
+  lastName        String
+  instagramHandle String
+  email           String
+  phone           String // E.164, encrypted at rest
+  dateOfBirth     DateTime
+  city            City   @default(BEIRUT)
+  area            String?
+
+  howFound     String? @db.VarChar(280)
+  referralCode String? // member code or @handle typed by applicant
+
+  referredById String?
+  referredBy   MemberProfile? @relation("ApplicationReferrer", fields: [referredById], references: [id])
+
+  confirmedAdult    Boolean  @default(false)
+  agreedHouseRules  Boolean  @default(false)
+  consentMessaging  Boolean  @default(false)
+  consentPrivacy    Boolean  @default(false)
+  consentIp         String?
+  consentAt         DateTime?
+
+  status     ApplicationStatus @default(PENDING)
+  reviewedAt DateTime?
+  reviewedBy String?
+
+  // one-time token used for the /welcome moment after approval
+  welcomeToken     String?   @unique
+  welcomeTokenExp  DateTime?
+  welcomeSeenAt    DateTime?
+
+  member MemberProfile?
+
+  notes AdminNote[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@index([instagramHandle])
+}
+
+// ─────────────────────────────────────────────────────────────
+// MEMBER
+// ─────────────────────────────────────────────────────────────
+
+model MemberProfile {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  applicationId String?      @unique
+  application   Application? @relation(fields: [applicationId], references: [id])
+
+  // permanent, zero-padded 4 digits, e.g. "0065". Never reused, never reassigned.
+  memberNumber String @unique
+
+  firstName       String
+  lastName        String
+  instagramHandle String
+
+  phone         String // E.164, encrypted at rest
+  phoneVerified Boolean   @default(false)
+  phoneVerifiedAt DateTime?
+
+  dateOfBirth DateTime
+  city        City   @default(BEIRUT)
+  area        String?
+
+  status       MemberStatus @default(ACTIVE)
+  foundingRose Boolean      @default(false)
+
+  // internal only — NEVER serialized to a member-facing response
+  roseHealth       Int      @default(100)
+  roseHealthAt     DateTime @default(now())
+
+  eventsInvited   Int @default(0)
+  eventsConfirmed Int @default(0)
+  eventsAttended  Int @default(0)
+  eventsNoShow    Int @default(0)
+  eventsDeclined  Int @default(0)
+
+  lastAttendanceAt   DateTime?
+  lastInvitedAt      DateTime?
+  wakeRequestedAt    DateTime?
+  statusChangedAt    DateTime  @default(now())
+
+  communityStatus   CommunityStatus @default(NOT_INVITED)
+  communityJoinedAt DateTime?
+
+  roseCredential   RoseCredential?
+  deliveryAddress  DeliveryAddress?
+  roseDeliveries   RoseDelivery[]
+
+  invitations   EventInvitation[]
+  rsvps         Rsvp[]
+  stemGuests    StemGuest[]
+  checkIns      CheckIn[]
+  notes         AdminNote[]
+  referralsMade Referral[]        @relation("ReferralAuthor")
+  referredApplications Application[] @relation("ApplicationReferrer")
+  messages      MessageLog[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status])
+  @@index([memberNumber])
+  @@index([lastAttendanceAt])
+}
+
+// counter table so member numbers are allocated atomically
+model MemberNumberSequence {
+  id      Int @id @default(1)
+  current Int @default(64) // next allocated is 0065
+}
+
+// ─────────────────────────────────────────────────────────────
+// CREDENTIALS (physical objects)
+// ─────────────────────────────────────────────────────────────
+
+model RoseCredential {
+  id String @id @default(cuid())
+
+  memberId String        @unique
+  member   MemberProfile @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // engraved number == memberNumber. Denormalized deliberately: the object is hers forever.
+  engravedNumber String @unique
+
+  serial   String  @unique // internal manufacturing serial
+  nfcUid   String? @unique // Phase 5
+  qrToken  String  @unique
+
+  status   CredentialStatus @default(ASSIGNED)
+  madeAt   DateTime?
+  issuedAt DateTime?
+
+  replacesId String?         @unique
+  replaces   RoseCredential? @relation("RoseReplacement", fields: [replacesId], references: [id])
+  replacedBy RoseCredential? @relation("RoseReplacement")
+
+  replacementReason String?
+  replacementApprovedBy String?
+
+  checkIns CheckIn[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StemCredential {
+  id String @id @default(cuid())
+
+  stemGuestId String    @unique
+  stemGuest   StemGuest @relation(fields: [stemGuestId], references: [id], onDelete: Cascade)
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  braceletSerial String? @unique
+  nfcUid         String? @unique // Phase 5
+  qrToken        String  @unique
+
+  // per-event physical variation: leaf / thorn / stamp / cord / edge
+  editionMark String
+
+  status    CredentialStatus @default(ASSIGNED)
+  validFrom DateTime
+  validTo   DateTime // hard expiry — old bracelets die
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([eventId, status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// EVENTS
+// ─────────────────────────────────────────────────────────────
+
+model Event {
+  id String @id @default(cuid())
+
+  // "SERENA"
+  name String
+  // "001"
+  index String @unique
+  slug  String @unique
+
+  city City @default(BEIRUT)
+
+  startsAt DateTime // 00:00 local
+  endsAt   DateTime // 05:00 local
+  timezone String   @default("Asia/Beirut")
+
+  // hidden until venueRevealAt — never serialized before that moment
+  venueName    String?
+  venueAddress String?
+  venueNotes   String?
+  venueRevealAt DateTime?
+
+  status EventStatus @default(DRAFT)
+
+  capacityTotal  Int
+  capacityRoses  Int
+  capacityStems  Int
+
+  rsvpOpensAt   DateTime?
+  rsvpDeadline  DateTime?
+
+  stemsAllowed  Boolean @default(true)
+  stemPriceCents Int    @default(0)
+  stemCurrency  String  @default("USD")
+
+  // physical variation for this night's bracelets
+  editionMark String
+
+  tablesEnabled Boolean @default(true)
+  tablesRemovedAtLocal String? @default("01:00")
+
+  invitations EventInvitation[]
+  rsvps       Rsvp[]
+  stemGuests  StemGuest[]
+  credentials StemCredential[]
+  checkIns    CheckIn[]
+  payments    Payment[]
+  messages    MessageLog[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([status, startsAt])
+}
+
+model EventInvitation {
+  id String @id @default(cuid())
+
+  eventId  String
+  event    Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memberId String
+  member   MemberProfile @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  status      InvitationStatus @default(SENT)
+  invitedAt   DateTime         @default(now())
+  viewedAt    DateTime?
+  respondedAt DateTime?
+  expiresAt   DateTime?
+
+  rsvp Rsvp?
+
+  @@unique([eventId, memberId])
+  @@index([memberId, status])
+}
+
+model Rsvp {
+  id String @id @default(cuid())
+
+  eventId  String
+  event    Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  memberId String
+  member   MemberProfile @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  invitationId String          @unique
+  invitation   EventInvitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  response    RsvpResponse @default(NO_RESPONSE)
+  confirmedAt DateTime?
+  declinedAt  DateTime?
+  // true if she declined before rsvpDeadline — no penalty
+  declinedEarly Boolean @default(false)
+
+  outcome AttendanceOutcome @default(PENDING)
+
+  // 4-digit door code, hashed. Issued 24-48h before.
+  doorCodeHash    String?
+  doorCodeIssuedAt DateTime?
+  doorCodeUsedAt   DateTime?
+
+  checkInId String?  @unique
+  checkIn   CheckIn? @relation(fields: [checkInId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, memberId])
+  @@index([eventId, response])
+}
+
+// ─────────────────────────────────────────────────────────────
+// STEM
+// ─────────────────────────────────────────────────────────────
+
+model StemGuest {
+  id String @id @default(cuid())
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  hostMemberId String
+  hostMember   MemberProfile @relation(fields: [hostMemberId], references: [id], onDelete: Cascade)
+
+  firstName       String
+  lastName        String
+  phone           String // E.164, encrypted at rest
+  phoneVerified   Boolean @default(false)
+  instagramHandle String?
+  email           String?
+  dateOfBirth     DateTime
+  relationshipNote String? @db.VarChar(200)
+
+  // opaque public token → /s/AX7K9. Never a database id.
+  token       String    @unique
+  tokenExpiresAt DateTime?
+  openedAt    DateTime?
+
+  paymentStatus PaymentStatus @default(NONE)
+
+  doorCodeHash     String?
+  doorCodeIssuedAt DateTime?
+  doorCodeUsedAt   DateTime?
+
+  outcome AttendanceOutcome @default(PENDING)
+
+  credential StemCredential?
+  payments   Payment[]
+  checkIn    CheckIn?
+  flags      GuestFlag[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  // one Stem per Rose per event
+  @@unique([eventId, hostMemberId])
+  @@index([eventId, paymentStatus])
+  @@index([token])
+}
+
+model GuestFlag {
+  id          String    @id @default(cuid())
+  stemGuestId String
+  stemGuest   StemGuest @relation(fields: [stemGuestId], references: [id], onDelete: Cascade)
+  reason      String
+  severity    Int       @default(1) // 1 minor .. 3 banned
+  createdBy   String
+  createdAt   DateTime  @default(now())
+
+  @@index([stemGuestId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// DOOR
+// ─────────────────────────────────────────────────────────────
+
+model CheckIn {
+  id String @id @default(cuid())
+
+  eventId String
+  event   Event  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  subject CheckInSubject
+
+  memberId String?
+  member   MemberProfile? @relation(fields: [memberId], references: [id])
+
+  roseCredentialId String?
+  roseCredential   RoseCredential? @relation(fields: [roseCredentialId], references: [id])
+
+  stemGuestId String?    @unique
+  stemGuest   StemGuest? @relation(fields: [stemGuestId], references: [id])
+
+  enteredAt DateTime  @default(now())
+  exitedAt  DateTime?
+
+  verifiedBy   String // staff user id
+  verifyMethod String // "OTP" | "QR" | "NFC" | "MANUAL"
+  overrideReason String?
+
+  rsvp Rsvp?
+
+  @@index([eventId, subject])
+  @@index([eventId, enteredAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// VERIFICATION
+// ─────────────────────────────────────────────────────────────
+
+model PhoneVerification {
+  id String @id @default(cuid())
+
+  phone   String // E.164, encrypted at rest
+  purpose VerificationPurpose
+
+  userId      String?
+  stemGuestId String?
+  eventId     String?
+
+  codeHash  String
+  attempts  Int      @default(0)
+  maxAttempts Int    @default(5)
+  expiresAt DateTime
+  consumedAt DateTime?
+
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([phone, purpose, createdAt])
+  @@index([expiresAt])
+}
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  key       String // e.g. "otp:+9613xxxx" or "apply:ip:1.2.3.4"
+  count     Int      @default(0)
+  windowEnd DateTime
+
+  @@unique([key])
+  @@index([windowEnd])
+}
+
+// ─────────────────────────────────────────────────────────────
+// THE ROSE — DELIVERY
+// ─────────────────────────────────────────────────────────────
+
+model DeliveryAddress {
+  id String @id @default(cuid())
+
+  memberId String        @unique
+  member   MemberProfile @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  recipientName String
+  phone         String // encrypted at rest
+  city          City   @default(BEIRUT)
+  area          String
+  addressLine   String // encrypted at rest
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RoseDelivery {
+  id String @id @default(cuid())
+
+  memberId String
+  member   MemberProfile @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  status DeliveryStatus @default(PENDING_ADDRESS)
+
+  preparedAt  DateTime?
+  dispatchedAt DateTime?
+  deliveredAt DateTime?
+  failedAt    DateTime?
+  failureReason String?
+
+  courier        String?
+  trackingRef    String?
+  handoverPhotoKey String? // object storage key, never a public URL
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// PAYMENTS
+// ─────────────────────────────────────────────────────────────
+
+model Payment {
+  id String @id @default(cuid())
+
+  eventId String?
+  event   Event?  @relation(fields: [eventId], references: [id])
+
+  stemGuestId String?
+  stemGuest   StemGuest? @relation(fields: [stemGuestId], references: [id])
+
+  memberId String? // reserved for Phase 5 subscriptions
+
+  provider    PaymentProviderKind
+  providerRef String? // external intent/charge id
+  idempotencyKey String @unique
+
+  amountCents Int
+  currency    String @default("USD")
+  status      PaymentStatus @default(PENDING)
+
+  paidAt     DateTime?
+  refundedAt DateTime?
+  failureCode String?
+
+  rawEventJson Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@index([providerRef])
+}
+
+// Phase 5 — recurring membership. Present now so no migration rewrite is needed.
+model Subscription {
+  id String @id @default(cuid())
+
+  memberId String @unique
+
+  provider    PaymentProviderKind
+  providerRef String?
+
+  status         String   @default("INACTIVE")
+  currentPeriodEnd DateTime?
+  cancelAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────
+// REFERRAL
+// ─────────────────────────────────────────────────────────────
+
+model Referral {
+  id String @id @default(cuid())
+
+  authorMemberId String
+  authorMember   MemberProfile @relation("ReferralAuthor", fields: [authorMemberId], references: [id], onDelete: Cascade)
+
+  instagramHandle String
+  note            String? @db.VarChar(200)
+
+  status     ReferralStatus @default(SUBMITTED)
+  reviewedAt DateTime?
+  reviewedBy String?
+
+  inviteToken     String?   @unique
+  inviteExpiresAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([authorMemberId, instagramHandle])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────────────────────────
+// OPS
+// ─────────────────────────────────────────────────────────────
+
+model AdminNote {
+  id String @id @default(cuid())
+
+  memberId      String?
+  member        MemberProfile? @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  applicationId String?
+  application   Application?   @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  body      String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  @@index([memberId])
+  @@index([applicationId])
+}
+
+model MessageLog {
+  id String @id @default(cuid())
+
+  channel MessageChannel
+  status  MessageStatus  @default(QUEUED)
+
+  memberId String?
+  member   MemberProfile? @relation(fields: [memberId], references: [id])
+  eventId  String?
+  event    Event?         @relation(fields: [eventId], references: [id])
+  stemGuestId String?
+
+  templateKey String // e.g. "approval", "invitation", "door_code"
+  toRedacted  String // last 3 digits only, e.g. "•••••812"
+  providerRef String?
+  error       String?
+
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([templateKey, createdAt])
+  @@index([memberId])
+}
+
+model AuditLog {
+  id String @id @default(cuid())
+
+  actorId String?
+  actor   User?   @relation("AuditActor", fields: [actorId], references: [id])
+
+  action     String // "member.status.change", "application.approve", "pii.read"
+  entityType String
+  entityId   String
+
+  before Json?
+  after  Json?
+
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
+
+// ─────────────────────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────────────────────
+
+// Values an owner changes at runtime and a deploy must not own — today the two
+// community invite links, which have to be rotatable the moment one leaks.
+// Additive: nothing else in this schema changes shape because of it.
+model Setting {
+  key   String @id
+  value String
+
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}

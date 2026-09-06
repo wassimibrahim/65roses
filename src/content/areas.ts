@@ -1,0 +1,21 @@
+// Beirut areas offered quietly as a datalist on /apply — free text is always allowed
+export const BEIRUT_AREAS = [
+  "Achrafieh",
+  "Ain El Mreisseh",
+  "Badaro",
+  "Clemenceau",
+  "Downtown",
+  "Furn El Hayek",
+  "Gemmayzeh",
+  "Hamra",
+  "Karantina",
+  "Manara",
+  "Mar Mikhael",
+  "Monot",
+  "Ras Beirut",
+  "Saifi",
+  "Sassine",
+  "Sioufi",
+  "Sodeco",
+  "Verdun",
+] as const;

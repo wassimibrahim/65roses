@@ -1,0 +1,354 @@
+/* the world's skin — tokens, the two voices, and the few shared surfaces */
+@import "tailwindcss";
+
+:root {
+  --red-65: #4a0e14; /* oxblood — primary world */
+  --red-deep: #6b0f18; /* lift, used sparingly */
+  --chalk: #e8e2d6; /* dirty off-white — the voice */
+  --chalk-dim: rgba(232, 226, 214, 0.55);
+  --black: #0a0708; /* near-black, never #000 */
+  --gold: #b08d4f; /* muted antique gold — the Rose only */
+
+  --grain-opacity: 0.07;
+  --ease-65: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-slow: 600ms;
+}
+
+html {
+  background: var(--red-65);
+}
+
+body {
+  background: var(--red-65);
+  color: var(--chalk);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── the fixed overlays of the world ─────────────────────── */
+
+.world-layer {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+}
+
+/* ── text actions — chalk over a hand-drawn line ─────────── */
+
+.ta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-family: var(--font-chalk);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--chalk);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.ta-line {
+  width: 100%;
+  height: 7px;
+  margin-top: 2px;
+  overflow: visible;
+  transform: scaleX(0.72);
+  transform-origin: left center;
+  transition: transform 400ms var(--ease-65);
+}
+
+.ta:hover .ta-line,
+.ta:focus-visible .ta-line {
+  transform: scaleX(1);
+}
+
+.ta-quiet {
+  color: var(--chalk-dim);
+}
+
+.ta-disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+.ta-disabled .ta-line {
+  display: none;
+}
+
+/* ── atelier — dense, near-black, hairlines only ─────────── */
+
+.atelier-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.atelier-table th {
+  text-align: left;
+  font-weight: 400;
+  color: var(--chalk-dim);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.08);
+}
+
+.atelier-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.08);
+  color: var(--chalk);
+}
+
+.atelier-table a {
+  color: var(--chalk);
+}
+
+.atelier-action {
+  background: none;
+  border: 1px solid rgba(232, 226, 214, 0.25);
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+}
+
+.atelier-action:hover {
+  border-color: var(--chalk);
+}
+
+.atelier-input {
+  /* native controls — date pickers, selects — otherwise render in the
+     browser's own blue. The atelier is chalk on black, including these. */
+  color-scheme: dark;
+  accent-color: var(--chalk-dim);
+  background: transparent;
+  border: 1px solid rgba(232, 226, 214, 0.25);
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  padding: 0.45rem 0.6rem;
+  outline: none;
+}
+
+.atelier-input:focus {
+  border-color: var(--chalk);
+}
+
+.atelier-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--chalk-dim);
+}
+
+/* ── fields — no boxes, a chalk baseline that thickens on focus ── */
+
+.field-label {
+  display: block;
+  font-family: var(--font-chalk);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: clamp(1rem, 4vw, 1.2rem);
+  margin-bottom: 0.75rem;
+}
+
+.field-input {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.35);
+  border-radius: 0;
+  padding: 0.4rem 0 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  letter-spacing: 0.08em;
+  color: var(--chalk);
+  caret-color: var(--chalk);
+  outline: none;
+  transition: border-color 400ms var(--ease-65);
+}
+
+.field-input:focus {
+  border-bottom: 2px solid var(--chalk);
+  padding-bottom: calc(0.5rem - 1px);
+}
+
+.field-error .field-input {
+  border-bottom: 2px solid var(--chalk);
+  padding-bottom: calc(0.5rem - 1px);
+}
+
+.field-error-line {
+  margin-top: 0.75rem;
+  font-family: var(--font-chalk);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1rem;
+  color: var(--chalk);
+}
+
+/* the growing hairline — the only progress indicator on /apply */
+.hairline-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(232, 226, 214, 0.45);
+  transition: width var(--dur-slow) var(--ease-65);
+}
+
+/* ── choices — small chalk squares with hand-drawn ticks ── */
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--chalk);
+  font-family: var(--font-chalk);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: clamp(1rem, 4vw, 1.2rem);
+}
+
+.choice-square {
+  flex: none;
+}
+
+/* ── fade in once on scroll — never out, no parallax ─────── */
+
+.fadein {
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-65);
+}
+
+.fadein[data-seen="true"] {
+  opacity: 1;
+}
+
+/* ── reveal — fade in on mount, nothing else ─────────────── */
+
+.reveal {
+  opacity: 0;
+  transition: opacity var(--dur-slow) var(--ease-65);
+}
+
+.reveal[data-mounted="true"] {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ta-line {
+    transition: none;
+  }
+  .reveal,
+  .fadein {
+    opacity: 1;
+    transition: none;
+  }
+}
+
+/* ── the door ─────────────────────────────────────────────────────────
+   Read at arm's length, in the dark, by someone holding a clipboard and a
+   drink. Targets are large; nothing here is subtle. */
+
+.door-search {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.35);
+  border-radius: 0;
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 12vw, 3rem);
+  letter-spacing: 0.12em;
+  text-align: center;
+  padding: 0.6rem 0;
+  outline: none;
+}
+
+.door-search:focus {
+  border-bottom-color: var(--chalk);
+}
+
+.door-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 4.5rem;
+  justify-content: center;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(232, 226, 214, 0.08);
+  color: var(--chalk);
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+  cursor: pointer;
+}
+
+.door-row-meta {
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: var(--chalk-dim);
+}
+
+/* ── the manifest ─────────────────────────────────────────────────────
+   Printed and carried. One Rose per page, black on white, nothing decorative
+   — the only surface in the world that is not the world. */
+
+.manifest {
+  background: #fff;
+  color: #111;
+  font-family: var(--font-mono);
+}
+
+.manifest-page {
+  padding: 3rem;
+  min-height: 60vh;
+  border-bottom: 1px dashed #bbb;
+  page-break-after: always;
+  break-after: page;
+}
+
+.manifest-number {
+  font-size: 2.5rem;
+  letter-spacing: 0.35em;
+}
+
+.manifest-name {
+  margin-top: 2rem;
+  font-size: 1.3rem;
+}
+
+.manifest-line {
+  margin-top: 0.5rem;
+  font-size: 1rem;
+}
+
+.manifest-note {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+@media print {
+  .manifest-page {
+    border-bottom: none;
+  }
+}
