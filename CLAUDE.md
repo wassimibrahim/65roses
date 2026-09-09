@@ -1,3 +1,20 @@
+# REPO IDENTITY — READ BEFORE ANYTHING ELSE
+
+This repository is **65 ROSES**. Nightlife membership, Beirut.
+
+It is **NOT terraos**. If the task you were given mentions atlas, deals,
+investors, underwriting, origination, comparables, institutions, or an IC
+memo, you are in the wrong repository. **Stop and say so.**
+
+- Dev port: **3000**
+- Database: **roses65** — never a database shared with another project
+- Package name: **65roses**
+
+There is precedent for this going wrong. Terra OS was once built as a branch
+inside this repository; see the note at the end of this file.
+
+---
+
 # 65 ROSES — PROJECT CONSTITUTION
 
 This file is permanent memory. Read it before every task. Do not deviate from it.
@@ -346,3 +363,20 @@ Enforce server-side.
 ---
 
 `0065`
+
+---
+
+## APPENDIX — THE TERRA OS INCIDENT
+
+On 2026-09-06 a Terra OS build ran inside this repository. It branched from the
+65 ROSES history and added 156 files under `terra/`, on the branch
+`claude/terra-os-platform-build-e4b30u`. A later commit on that branch removed
+them, so no Terra OS file has ever been on `main`.
+
+**The history is still reachable.** Deleting files in a later commit does not
+remove them from the repository; anyone who can clone 65 ROSES can read every
+Terra OS file, including its seed data on institutions, organisations and
+people. If that matters, the branch has to be deleted and the objects expired —
+not merely reverted.
+
+This appendix exists so the next person does not have to rediscover it.
