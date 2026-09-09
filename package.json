@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run check-repo && next dev",
-    "build": "npm run check-repo && next build",
+    "build": "npm run check-repo && prisma generate && next build",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
@@ -18,7 +18,8 @@
     "db:push": "prisma db push",
     "rehearsal": "tsx tests/rehearsal/night.mts",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build",
-    "check-repo": "node scripts/check-repo.mjs"
+    "check-repo": "node scripts/check-repo.mjs",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
