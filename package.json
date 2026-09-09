@@ -3,21 +3,22 @@
   "version": "0.0.65",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "npm run check-repo && next dev",
+    "build": "npm run check-repo && next build",
     "start": "next start",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "npm run check-repo && vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "rehearsal": "tsx tests/rehearsal/night.mts",
-    "verify": "npm run typecheck && npm run lint && npm test && npm run build"
+    "verify": "npm run typecheck && npm run lint && npm test && npm run build",
+    "check-repo": "node scripts/check-repo.mjs"
   },
   "dependencies": {
     "@prisma/client": "^6.16.2",
