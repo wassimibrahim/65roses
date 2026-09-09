@@ -32,7 +32,14 @@ if (pkg.name !== EXPECTED_NAME) {
 
 // The catastrophic case: a 65 ROSES command pointed at another project's
 // database. `prisma migrate reset --force` there would take the Roses with it.
-const url = process.env.DATABASE_URL;
+//
+// This only makes sense on a laptop with two projects on it. A build machine
+// holds one checkout and one database, whose hosted name we do not get to
+// choose — refusing to build there would be the guard causing the outage it
+// exists to prevent. So the name check is skipped in CI, and the identity
+// check above, which is free and true everywhere, is not.
+const hosted = Boolean(process.env.VERCEL || process.env.CI);
+const url = hosted ? null : process.env.DATABASE_URL;
 if (url) {
   const name = url.split("?")[0].split("/").pop() ?? "";
   if (!name.toLowerCase().includes(EXPECTED_DB)) {
